@@ -1,0 +1,45 @@
+{
+  "name": "relux.js",
+  "version": "0.1.0",
+  "description": "Flexible and easy state management container for javascript app.",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "repository": "https://github.com/rempei-okada/relux.js",
+  "author": "rempei okada",
+  "license": "MIT",
+  "private": false,
+  "keywords": [
+    "relux",
+    "reluxjs",
+    "relux.js",
+    "redux",
+    "reducer",
+    "state",
+    "oop",
+    "predictable",
+    "functional",
+    "immutable",
+    "mutable",
+    "mutation",
+    "vuex",
+    "hot",
+    "live",
+    "replay",
+    "flux",
+    "elm"
+  ],
+  "devDependencies": {
+    "rollup": "^2.36.1",
+    "rollup-plugin-typescript2": "^0.29.0",
+    "typescript": "^4.1.3"
+  },
+  "scripts": {
+    "build": "yarn rollup -c rollup.config.js",
+    "start": "yarn rollup -c rollup.config.js --watch"
+  },
+  "dependencies": {
+    "injection-js": "^2.4.0",
+    "reflect-metadata": "^0.1.13"
+  }
+}
