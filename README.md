@@ -1,7 +1,6 @@
-# Relux - documentation
+# Relux.js
 
 [![npm version](https://badge.fury.io/js/relux.js.svg)](https://badge.fury.io/js/relux.js)
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Flexible and easy state management container for React or other javascript apps. 
