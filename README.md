@@ -2,6 +2,8 @@
 
 Flexible and easy state management container for javascript app. 
 
+[DEMO](https://rempei-okada.github.io/relux.js/)
+
 ># Background to development
 
 Relux provides you to simply manage unidirectional data flow without the hassle of particularly difficult or boilerplate considerations.
