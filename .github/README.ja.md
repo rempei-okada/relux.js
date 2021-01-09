@@ -1,13 +1,15 @@
 # Relux.js
 
-English / [日本語](https://github.com/rempei-okada/relux.js/blob/main/.github/README.ja.md)
+[English](https://github.com/rempei-okada/relux.js/blob/main/relux/README.md) / 日本語
 
 [![npm version](https://badge.fury.io/js/relux.js.svg)](https://badge.fury.io/js/relux.js)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Flexible and easy state management container for React or other javascript apps. 
+Reactやその他JavaScriptアプリ用のシンプルで柔軟な状態管理ライブラリです。
 
-Relux.js provides you to simply manage unidirectional data flow without the hassle of particularly difficult or boilerplate considerations.
+Relux.jsを使用すると、めんどくさいボイラープレートに煩わされることなく、単方向のデータフローを簡単に管理できます。
+
+Relux provides you to simply manage unidirectional data flow without the hassle of particularly difficult or boilerplate considerations.
 
 [DEMO](https://rempei-okada.github.io/relux.js/)
 
@@ -15,33 +17,29 @@ Relux.js provides you to simply manage unidirectional data flow without the hass
 
 [Documents on Github](https://github.com/rempei-okada/relux.js)
 
-# Background to development
+# 開発の背景
 
-I felt that the existing React state management library wouldn't scale for me.
+既存のReactの状態管理ライブラリは合わないなと日々感じていました。
 
-Redux, Recoil and MobX are popular for React state management. The otherwise there are numerous state management libraries. middlewares are also crowded, so which one should I choose ...
+Redux、Recoil、MobXはReactの状態管理ライブラリとして人気があります。それ以外の場合でも、多数の状態管理ライブラリがあります。ミドルウェアも乱立していて、どちらを選ぶべきか迷います...
 
-Redux has achieved robust data flow with great Functional-Programming.
-By using Redux-Toolkit, you can eliminate annoying boilerplates, and keep plates and Type-Safe.
-However, I thought Redux didn't go very well with the Domain-Driven-Design, Onion or Clean architecture and dependency-injection that has been done in Object-Oriented-Programming. And so is Recoil too.
+Reduxは、優れた関数型プログラミングで堅牢なデータフローを実現しました。Redux-Toolkitを使用することで、煩わしいボイラープレートを排除し、タイプセーフを維持できます。 しかし、Reduxは、ドメイン駆動設計、オニオンまたはクリーンアーキテクチャ、およびオブジェクト指向プログラミングで行われた依存性注入にはあまり適していないと思いました。そして、Recoilもそうです。
 
-How about MobX? MobX realize Object-Oriented-Programming approach and easy to implement and very simple to write.
-But, It does not necessarily require unidirectional data flow. That means you can easily break it even if you set rules.
+MobXはどうでしょう？MobXは、オブジェクト指向プログラミングアプローチを実現し、実装が簡単で、記述が非常に簡単です。ただし、必ずしも一方向のデータフローは必要ありません。つまり、ルールを設定しても簡単に破ることができます。
 
-I think Vue's Vuex and Elm architectures are very simple and excellent.
-I wanted a state management library that could easily be integrated with Object-Oriented-Programming with those characteristics and Type-Safe.
+VueのVuexとElmのアーキテクチャは非常にシンプルで優れていると思います。これらの特性とタイプセーフを備えたオブジェクト指向プログラミングと簡単に統合できる状態管理ライブラリが必要でした。
 
-Therefore, referring to Vuex and Elm architecture, we devise Relux.js to fill the gap between Redux and MobX.
+したがって、VuexとElmのアーキテクチャを参考にして、ReduxとMobXの間のギャップを埋めるためにRelux.jsを考案します。
 
-Functional-Programming is great, but sometimes Relux.js can be useful when you want to blend in with Object-Oriented-Programming.
+関数型プログラミングは素晴らしいですが、オブジェクト指向プログラミングと融合したい場合は、Relux.jsが役立つことでしょう。
 
 # Rules
 ![](./relux.png)
 
-* State should always be read-only.
-* To change state our app should dispatch an action.
-* Every mutation that processes the dispatched action  will create new state to reflect the old state combined with the changes expected for the action.
-* The UI then uses the new state to render its display.
+* 状態は常に読み取り専用にしましょう.
+* 状態を変更するにはActionをDispatchしましょう.
+* ディスパッチされたアクションを処理するすべてのミューテーションは、アクションに期待される変更と組み合わされた古い状態を反映する新しい状態を作成します.
+* UIは新しい状態を使用して表示をレンダリングします。.
 
 # Installation
 
@@ -49,7 +47,7 @@ Functional-Programming is great, but sometimes Relux.js can be useful when you w
 yarn add relux.js react-relux
 ```
 
-or
+または
 
 ```
 npm install --save relux.js react-relux
@@ -57,19 +55,19 @@ npm install --save relux.js react-relux
 
 # Usage
 
-As a example, implement counters and Fibonacci counters in various patterns.
-Each feature can be sliced. A combination of multiple actions and one state is called a slice.
+例として、さまざまなパターンでカウンターとフィボナッチカウンターを実装します。
+各機能はスライスできます。 複数のアクションと1つの状態の組み合わせは、スライスと呼ばれます。
 
-All examples are written in TypeScript, but JavaScript can also be used.
+すべての例はTypeScriptで記述されていますが、JavaScriptも使用できます。
 
 ## Create Initial State
 
-Create two slices of ```counter``` and ```Fib```.
-Actions can only update the state of the slice to which they belong.
+まずは ```counter``` と ```Fib```の２つのスライスを作成しましょう.
+Actionは自身のスライスの状態のみ更新できます.
 
 ### Define state type.
 
-As a class instance.
+クラスのインスタンスとして定義する.
 
 ```ts
 import { State } from "relux.js";
@@ -86,7 +84,7 @@ export class CounterState extends State<CounterState> {
 }
 ```
 
-As a plane object.
+プレーンオブジェクトとして定義する.
 
 ```ts
 /**
@@ -100,7 +98,7 @@ export interface FibState {
 
 ## Create a store instance.
 
-Please register the slice. Also, for services, specify the service described below for which you want to inject dependencies.
+初期値やアクション、後述するServiceを登録してStoreインスタンスを作成しましょう. Serviceを登録するとDIすることができます.
 
 ```ts
 import { createStore } from "relux.js";
@@ -139,10 +137,10 @@ export type RootState = ReturnType<typeof store.getState>;
 
 ## Create Actions
 
-To create an action, you need to extends ```Action<TState,  Tpayload>``` class. The class name is the action name. For TState, specify the type of the state, and for TPayload, specify the type of the argument received by the invoke method.
-When you dispatch an Action, the invoke method is called.
+アクションを作成するには```Action<TState,  Tpayload>``` クラスを継承する必要があります. クラス名がアクション名となります.  TStateには状態の型, TPayoadにはペーロードの型を指定してください。 
+ActionをDispatchした際、invokeメソッドがコールされます.
 
-class name is used as the action name, but when minify and compressing the class name with Bandler, it can be overridden by declaring the ```name``` property.
+クラス名がアクション名となりますが, Webpackや静的サイトジェネレータなどで圧縮されて元のクラス名がわからなくなる場合は, ```name``` プロパティを定義することでアクション名を上書きできます.
 
 ```ts
 class HogeState extends State<HogeState> {
@@ -186,7 +184,7 @@ export class AsyncIncrementCountAction extends Action<CounterState, number>  {
 
 ## Dispatch an action and change states
 
-States will change after 1000ms.
+1000ms後にカウントアップします.
 
 ```ts
 store.dispatch(AsyncIncrementCountAction, 1000);
@@ -194,7 +192,7 @@ store.dispatch(AsyncIncrementCountAction, 1000);
 
 ## Subscribe on states changed
 
-Called 1000ms after dispatching.
+1000ms後にカウントアップした際に発火します.
 
 ```ts
 store.subscribe(e => {
@@ -228,10 +226,10 @@ export class AsyncIncrementCountAction extends Action<CounterState, number>  {
 
 ## With React
 
-An Example for React. Update state and render with Hooks.
+Reactを使用した際の例です. Hooksを利用して、状態を更新、描画をしています.
 
 ```tsx
-import { Provider, useStore, useObserver } from "react-relux";
+import { Provider, useDispatch, useObserver } from "react-relux";
 
 export default () => {
     return (
@@ -245,12 +243,12 @@ export default () => {
 };
 
 function Counter() {
-    const store = useStore();
+    const dispatch = useDispatch();
     const counter = useObserver((s: RootState) => s.counter);
     const next = useObserver((s: RootState) => s.counter.next);
 
     function increment() {
-        store.dispatch(AsyncIncrementCountAction, 1000)
+        dispatch(AsyncIncrementCountAction, 1000)
     }
 
     return (
@@ -288,11 +286,11 @@ function FibCounter() {
 
 ## Dependency Injection
 
-Services implemented as side effects such as HTTP Requests, asynchronous, DB access, and algorithm implementation can be accessed from actions using dependency injection.
+HTTPリクエスト、非同期、DBアクセス、アルゴリズム実装などの副作用として実装されたServiceには、依存性の注入（DI）を使用してアクションからアクセスできます。
 
 ### Create a service and register
 
-Create a service that generate fibonacci number.
+フィボナッチ数を生成するServiceを実装してみましょう.
 
 ```ts
 class FibonacciService {
@@ -316,8 +314,8 @@ const store = createStore({
 
 ### Resolve without Decorator
 
-If you define a static property ```parameters``` that return definition array to inject a dependency, the service will be automatically assigned to constructor arguments when you dispatch the action. Services can also be nested. 
-parameters must match the constructor arguments exactly.
+コンストラクタ引数を定義した配列を返す静的プロパティ `` `parameters```を定義すると、ActionをDispatchするときにServiceがコンストラクター引数に自動的に割り当てられます。 Serviceはネストすることもできます。
+パラメーターは、コンストラクターの引数と正確に一致する必要があります。
 
 ```ts
 /**
@@ -357,28 +355,28 @@ export class IncrementalFibonacciAction extends Action<FibState, undefined> {
 
 #### Setup
 
-Also for TypeScript you will need to enable ```experimentalDecorators``` and ```emitDecoratorMetadata``` flags within your tsconfig.json
+デコレータを利用すると自動でDIを解決することができます。
+TypeScriptの場合、tsconfig.json内で `` `experimentalDecorators```フラグと` `` emitDecoratorMetadata```フラグを有効にする必要があります。
 
-If you want to build on bable (Gatsby, Create React App, etc.), you'd need the following Babel plugin.
-add the babel package plugin-proposal-decorators.
+Bable（Gatsby、Create React Appなどの場合）でコンパイルする場合は、次のBabelプラグインが必要です。
 
 ```
 yarn add -D @babel/plugin-proposal-decorators babel-plugin-transform-typescript-metadata
 ```
-or
+または
 ```
 npm install -D @babel/plugin-proposal-decorators babel-plugin-transform-typescript-metadata
 ```
 
-Add the following configuration to your ```.babelrc``` or ```babel.config.js``` file ```plugins``` section.
+Babelの設定ファイル ```.babelrc``` または ```babel.config.js``` の ```plugins``` 項目に以下を追加してください.
 
 ```
 ["@babel/plugin-proposal-decorators", { "legacy": true }],
 ["babel-plugin-transform-typescript-metadata"]
 ```
 
-Give your class ```@Injectable``` decorator.
-After that, just specify the type in the constructor argument and it will be assigned automatically without doing anything special.
+クラスに ```@Injectable``` デコレータを付与してください.
+特に何もしなくとも、コンストラクタ引数の型を解析して自動でDIされるようになります.
 
 ```ts
 import { Injectable } from "relux.js";
@@ -415,6 +413,7 @@ export class IncrementalFibonacciAction extends Action<FibState, undefined> {
 ```
 
 # License
-Designed with ♥ Renpei Okada. Licensed under the MIT License.
+MIT Licenseです.
+Renpei Okadaより♥を込めて設計しました. 
 
 # Have a nice development life ♥
