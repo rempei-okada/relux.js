@@ -1,6 +1,6 @@
 {
   "name": "react-relux",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Relux.js binding for react. Relux is a flexible and easy state management container for React app.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
