@@ -17,21 +17,21 @@ Relux provides you to simply manage unidirectional data flow without the hassle 
 
 I felt that the existing React state management library wouldn't scale for me.
 
-Redux and MobX are popular for React state management. The otherwise there are numerous state management libraries.
+Redux, Recoil and MobX are popular for React state management. The otherwise there are numerous state management libraries. middlewares are also crowded, so which one should I choose ...
 
-Redux has achieved robust data flow with great functional-programming.
+Redux has achieved robust data flow with great Functional-Programming.
+By using Redux-Toolkit, you can eliminate annoying boilerplates, and keep plates and Type-Safe.
+However, I thought Redux didn't go very well with the Domain-Driven-Design, Onion or Clean architecture and dependency-injection that has been done in Object-Oriented-Programming. And so is Recoil too.
 
-However, I thought Redux didn't go very well with the domain-driven-design and dependency-injection that has been done in object-oriented-programming. The middleware is also crowded, so which one should I choose ...
-
-How about MobX? MobX realize object-oriented-programming approach and easy to implement and very simple to write.
+How about MobX? MobX realize Object-Oriented-Programming approach and easy to implement and very simple to write.
 But, It does not necessarily require unidirectional data flow. That means you can easily break it even if you set rules.
 
 I think Vue's Vuex and Elm architectures are very simple and excellent.
-I wanted a state management library that could easily be integrated with object-oriented-programming with those characteristics.
+I wanted a state management library that could easily be integrated with Object-Oriented-Programming with those characteristics and Type-Safe.
 
 Therefore, referring to Vuex and Elm architecture, we devise Relux.js to fill the gap between Redux and MobX.
 
-functional-programming is great, but sometimes Relux.js can be useful when you want to blend in with object-oriented-programming.
+Functional-Programming is great, but sometimes Relux.js can be useful when you want to blend in with Object-Oriented-Programming.
 
 # Rules
 ![](./relux.png)
@@ -57,6 +57,8 @@ npm install --save relux.js react-relux
 
 As a example, implement counters and Fibonacci counters in various patterns.
 Each feature can be sliced. A combination of multiple actions and one state is called a slice.
+
+All examples are written in TypeScript, but JavaScript can also be used.
 
 ## Create Initial State
 
