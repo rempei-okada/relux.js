@@ -5,9 +5,9 @@
 [![npm version](https://badge.fury.io/js/relux.js.svg)](https://badge.fury.io/js/relux.js)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Reactやその他JavaScriptアプリ用のシンプルで柔軟な状態管理ライブラリです。
+ReactやJavaScriptで利用できる、シンプルで柔軟な状態管理ライブラリです。TypeScript Firstで設計しました。
 
-Relux.jsを使用すると、めんどくさいボイラープレートに煩わされることなく、単方向のデータフローを簡単に管理できます。
+Relux.jsを使用すると、めんどくさいボイラープレートに煩わされることなく、クラスベースのオブジェクト指向とDIを利用して利用して単方向のデータフローを簡単に管理できます。
 
 Relux provides you to simply manage unidirectional data flow without the hassle of particularly difficult or boilerplate considerations.
 
