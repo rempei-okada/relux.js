@@ -58,6 +58,8 @@ npm install --save relux.js react-relux
 As a example, implement counters and Fibonacci counters in various patterns.
 Each feature can be sliced. A combination of multiple actions and one state is called a slice.
 
+All examples are written in TypeScript, but JavaScript can also be used.
+
 ## Create Initial State
 
 Create two slices of ```counter``` and ```Fib```.

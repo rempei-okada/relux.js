@@ -1,4 +1,5 @@
 module.exports = {
+  assetPrefix: `/relux.js`,
   siteMetadata: {
     title: "Relux.js Documents",
   },

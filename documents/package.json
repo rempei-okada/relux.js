@@ -11,7 +11,8 @@
         "start": "gatsby develop",
         "build": "gatsby build",
         "serve": "gatsby serve",
-        "clean": "gatsby clean"
+        "clean": "gatsby clean",
+        "deploy":"gatsby build --prefix-paths && gh-pages -d public -b demo"
     },
     "license": "MIT",
     "dependencies": {
@@ -23,12 +24,9 @@
         "gatsby-plugin-emotion": "^5.1.0",
         "gatsby-plugin-mdx": "^1.7.1",
         "gatsby-source-filesystem": "^2.8.1",
-        "global": "^4.4.0",
-        "http-server": "^0.12.3",
         "react": "^16.13.1",
         "react-dom": "^16.13.1",
         "react-relux": "link:../react-relux",
-        "reflect-metadata": "^0.1.13",
         "relux.js": "link:../relux",
         "tsyringe": "^4.4.0"
     },
