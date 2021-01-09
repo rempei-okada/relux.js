@@ -1,14 +1,14 @@
 {
   "name": "react-relux",
-  "version": "0.1.0",
-  "description": "Flexible and easy state management container for React app.",
+  "version": "0.1.1",
+  "description": "Relux.js binding for react. Relux is a flexible and easy state management container for React app.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": "https://github.com/rempei-okada/relux.js",
   "author": "rempei okada",
   "license": "MIT",
-  "private": false,
   "keywords": [
+    "react",
     "relux",
     "reluxjs",
     "relux.js",
