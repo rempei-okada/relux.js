@@ -9,8 +9,6 @@ ReactやJavaScriptで利用できる、シンプルで柔軟な状態管理ラ�
 
 Relux.jsを使用すると、めんどくさいボイラープレートに煩わされることなく、クラスベースのオブジェクト指向とDIを利用して利用して単方向のデータフローを簡単に管理できます。
 
-Relux provides you to simply manage unidirectional data flow without the hassle of particularly difficult or boilerplate considerations.
-
 [DEMO](https://rempei-okada.github.io/relux.js/)
 
 [NPM](https://www.npmjs.com/package/relux.js)

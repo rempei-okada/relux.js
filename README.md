@@ -5,7 +5,7 @@ English / [日本語](https://github.com/rempei-okada/relux.js/blob/main/.github
 [![npm version](https://badge.fury.io/js/relux.js.svg)](https://badge.fury.io/js/relux.js)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Flexible and easy state management container for React or other javascript apps designed by TypeScript first. 
+Flexible and easy state management container for React or other javascript apps designed with TypeScript-First. 
 
 Relux.js provides you to Simply manage unidirectional data flows with class-based Object-Orientation-Programming and Dependency Injection.
 
