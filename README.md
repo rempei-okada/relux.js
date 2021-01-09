@@ -1,5 +1,9 @@
 # Relux - documentation
 
+[![npm version](https://badge.fury.io/js/relux.js.svg)](https://badge.fury.io/js/relux.js)
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Flexible and easy state management container for React or other javascript apps. 
 
 Relux provides you to simply manage unidirectional data flow without the hassle of particularly difficult or boilerplate considerations.
