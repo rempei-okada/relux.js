@@ -1,0 +1,6 @@
+node_modules/
+.cache/
+public/
+dist
+yarn.lock
+yarn-error.log
