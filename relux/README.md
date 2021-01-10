@@ -1,11 +1,13 @@
 # Relux.js
 
+English / [日本語](https://github.com/rempei-okada/relux.js/blob/main/.github/README.ja.md)
+
 [![npm version](https://badge.fury.io/js/relux.js.svg)](https://badge.fury.io/js/relux.js)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Flexible and easy state management container for React or other javascript apps. 
+Flexible and easy state management container for React or other JavaScript apps designed with TypeScript-First. 
 
-Relux provides you to simply manage unidirectional data flow without the hassle of particularly difficult or boilerplate considerations.
+Relux.js provides you to Simply manage unidirectional data flows with class-based Object-Orientation-Programming and Dependency Injection.
 
 [DEMO](https://rempei-okada.github.io/relux.js/)
 
@@ -37,7 +39,7 @@ Functional-Programming is great, but sometimes Relux.js can be useful when you w
 ![](./relux.png)
 
 * State should always be read-only.
-* To alter state our app should dispatch an action.
+* To change state our app should dispatch an action.
 * Every mutation that processes the dispatched action  will create new state to reflect the old state combined with the changes expected for the action.
 * The UI then uses the new state to render its display.
 
@@ -98,7 +100,7 @@ export interface FibState {
 
 ## Create a store instance.
 
-Please register the slice. Also, for services, specify the service for which you want to inject dependencies.
+Please register the slice. Also, for services, specify the service described below for which you want to inject dependencies.
 
 ```ts
 import { createStore } from "relux.js";
@@ -192,7 +194,7 @@ store.dispatch(AsyncIncrementCountAction, 1000);
 
 ## Subscribe on states changed
 
-Called 1000 seconds after dispatching.
+Called 1000ms after dispatching.
 
 ```ts
 store.subscribe(e => {
@@ -225,6 +227,8 @@ export class AsyncIncrementCountAction extends Action<CounterState, number>  {
 ```
 
 ## With React
+
+An Example for React. Update state and render with Hooks.
 
 ```tsx
 import { Provider, useStore, useObserver } from "react-relux";
@@ -262,11 +266,11 @@ function Counter() {
 }
 
 function FibCounter() {
-    const store = useStore();
+    const dispatch = useDispatch();
     const counter = useObserver((s: RootState) => s.fib);
 
     function increment() {
-        store.dispatch(IncrementalFibonacciAction, undefined)
+        dispatch(IncrementalFibonacciAction, undefined)
     }
 
     return (
@@ -409,3 +413,8 @@ export class IncrementalFibonacciAction extends Action<FibState, undefined> {
     }
 }
 ```
+
+# License
+Designed with ♥ Renpei Okada. Licensed under the MIT License.
+
+# Have a nice development life ♥

@@ -266,11 +266,11 @@ function Counter() {
 }
 
 function FibCounter() {
-    const store = useStore();
+    const dispatch = useDispatch();
     const counter = useObserver((s: RootState) => s.fib);
 
     function increment() {
-        store.dispatch(IncrementalFibonacciAction, undefined)
+        dispatch(IncrementalFibonacciAction, undefined)
     }
 
     return (
