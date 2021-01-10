@@ -135,7 +135,7 @@ export type RootState = ReturnType<typeof store.getState>;
 
 ## Create Actions
 
-アクションを作成するには```Action<TState,  Tpayload>``` クラスを継承する必要があります. クラス名がアクション名となります.  TStateには状態の型, TPayoadにはペーロードの型を指定してください。 
+アクションを作成するには```Action<TState,  Tpayload>``` クラスを継承する必要があります. クラス名がアクション名となります.  TStateには状態の型, TPayoadにはペイロードの型を指定してください。 
 ActionをDispatchした際、invokeメソッドがコールされます.
 
 クラス名がアクション名となりますが, Webpackや静的サイトジェネレータなどで圧縮されて元のクラス名がわからなくなる場合は, ```name``` プロパティを定義することでアクション名を上書きできます.
@@ -262,11 +262,11 @@ function Counter() {
 }
 
 function FibCounter() {
-    const store = useStore();
+    const dispatch = useDispatch();
     const counter = useObserver((s: RootState) => s.fib);
 
     function increment() {
-        store.dispatch(IncrementalFibonacciAction, undefined)
+        dispatch(IncrementalFibonacciAction, undefined)
     }
 
     return (
