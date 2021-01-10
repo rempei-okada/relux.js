@@ -1,8 +1,8 @@
 {
   "name": "relux.js",
-  "version": "0.1.7",
+  "version": "0.1.11",
   "description": "Flexible and easy state management container for React or other javascript apps with TypeScript, supports class-based Object-Oriented-Programming and Dependency Injection.",
-  "main": "dist/index.js",
+  "main": "dist/index.esm.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "repository": "https://github.com/rempei-okada/relux.js",
