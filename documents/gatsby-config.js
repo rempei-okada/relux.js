@@ -1,5 +1,5 @@
 module.exports = {
-  assetPrefix: `/relux.js`,
+  assetPrefix: `/liange-official`,
   siteMetadata: {
     title: "Relux.js Documents",
   },

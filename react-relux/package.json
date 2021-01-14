@@ -1,6 +1,6 @@
 {
   "name": "react-relux",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Relux.js binding for react. Relux is a Flexible and easy state management container for React or other javascript apps with TypeScript, supports class-based Object-Oriented-Programming and Dependency Injection.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -33,7 +33,6 @@
     "start": "yarn rollup -c rollup.config.js --watch"
   },
   "dependencies": {
-    "relux.js": "^0.1.13"
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",
@@ -47,6 +46,7 @@
     "typescript": "^4.1.3"
   },
   "peerDependencies": {
-    "react": "^16.8.3 || ^17"
+    "react": "^16.8.3 || ^17",
+    "relux.js": "^0.1.14"
   }
 }

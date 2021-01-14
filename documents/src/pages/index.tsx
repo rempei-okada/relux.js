@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Provider, useStore, useObserver } from "react-relux";
-import { constructor } from "tsyringe/dist/typings/types";
 import { AsyncIncrementCountAction } from "../demo/counter";
 import { IncrementalFibonacciAction } from "../demo/fibonacci";
 import { RootState, store } from "../demo/store";
@@ -64,7 +63,7 @@ function FibCounter() {
 }
 
 function History() {
-    const store = useStore();
+    const store = useStore<RootState>();
     const [histories, setHistories] = useState<any[]>([]);
     const i = useRef(0);
 

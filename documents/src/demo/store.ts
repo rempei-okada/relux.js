@@ -1,6 +1,5 @@
 import "reflect-metadata";
-import { createStore, Store } from "relux.js";
-import { constructor } from "tsyringe/dist/typings/types";
+import { createStore } from "relux.js";
 import { AsyncIncrementCountAction, CounterState } from "./counter";
 import { FibonacciService, IncrementalFibonacciAction } from "./fibonacci";
 

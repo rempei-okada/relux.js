@@ -5,7 +5,7 @@ export default [
         input: './src/index.ts',
         output: {
             format: 'esm',
-            dir: './dist/', // 出力先ディレクトリトップ
+            dir: './build/', // 出力先ディレクトリトップ
             entryFileNames: 'index.esm.js',
         },
         plugins: [
