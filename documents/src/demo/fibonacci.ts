@@ -1,12 +1,14 @@
-import { Action, Feature, Injectable, Inject } from "relux.js";
-import { AsyncIncrementCountAction } from "./counter";
+import { Store, service, store, action, Message } from "relux.js";
 
-export interface FibState {
-    n: number;
-    count: number;
-    history: number[];
+const fibState = {
+    n: 0,
+    count: 0,
+    history: [] as number[]
 }
 
+type FibState = typeof fibState;
+
+@service()
 export class FibonacciService {
     public fib(n: number): number {
         if (n < 3) return 1;
@@ -14,35 +16,43 @@ export class FibonacciService {
     }
 }
 
+class SetFib extends Message {
+    constructor(readonly fib: number) { super(); }
+}
+
+export class CalcFib extends Message { }
+
 /**
  * Increament fibonacci counter action.
  */
-export class IncrementalFibonacciAction extends Action<FibState, undefined> {
-    static readonly parameters = [FibonacciService];
-    readonly name = "IncrementalFibonacciAction";
-
+@store({ name: "fib" })
+export class FibStore extends Store<FibState> {
     constructor(readonly fibService: FibonacciService) {
-        super();
+        super(fibState, FibStore.update);
     }
 
-    public invoke(_: undefined): Feature<FibState> {
-        return ({ dispatch, mutate, state }) => {
-            if (state.n < 40 === false) {
-                return;
-            }
+    static update(state: FibState, message: Message): FibState {
+        switch (true) {
+            case message instanceof SetFib:
+                const payload = message as SetFib;
+                return {
+                    ...state,
+                    n: state.n + 1,
+                    count: payload.fib,
+                    history: [...state.history, payload.fib]
+                }
+            default: return state;
+        }
+    }
 
-            const fib = this.fibService.fib(state.n + 1);
+    @action(CalcFib)
+    calc(_: CalcFib) {
+        if (this.state.n < 40 === false) {
+            return;
+        }
 
-            // update state
-            mutate(s => ({
-                ...s,
-                count: fib,
-                n: s.n + 1,
-                history: [...s.history, fib]
-            }));
+        const fib = this.fibService.fib(this.state.n);
 
-            // Dispatch another slice action
-            dispatch(AsyncIncrementCountAction, 1000);
-        };
+        this.mutate(new SetFib(fib));
     }
 }

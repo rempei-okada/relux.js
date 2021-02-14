@@ -1,1 +1,2 @@
-export declare const useDispatch: () => <TState, TPayload>(ctor: import("relux.js").constructor<any>, payload: TPayload) => Promise<void>;
+import { constructor, Store } from "relux.js";
+export declare const useDispatch: (storeType?: constructor<Store<object>> | undefined) => any;

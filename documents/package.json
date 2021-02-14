@@ -26,14 +26,14 @@
         "gatsby-source-filesystem": "^2.9.0",
         "react": "^17.0.1",
         "react-dom": "^17.0.1",
-        "react-relux": "^0.1.10",
-        "relux.js": "^0.1.14",
-        "tsyringe": "^4.4.0"
+        "react-relux": "^1.0.0",
+        "relux.js": "^1.0.0"
     },
     "devDependencies": {
         "@babel/plugin-proposal-decorators": "^7.12.12",
         "@babel/plugin-transform-typescript": "^7.12.1",
         "babel-plugin-transform-typescript-metadata": "^0.3.1",
-        "gatsby-plugin-typescript": "^2.10.0"
+        "gatsby-plugin-typescript": "^2.10.0",
+        "gh-pages": "^3.1.0"
     }
 }

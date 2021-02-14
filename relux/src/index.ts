@@ -1,20 +1,25 @@
 import 'reflect-metadata';
-import { Store, Slice } from "./Store";
-import { Action } from "./Action";
+import { Store, Provider, Message, action, store } from "./Store";
 import { State } from "./State";
-import { createStore } from "./createStore";
+import { createProvider } from "./createProvider";
 import {
     Injectable,
     Inject
 } from "injection-js";
+export * from "./constructor";
 
-export * from "./Feature";
+function service() {
+    return Injectable();
+}
 
 export {
     Store,
-    Action,
+    Provider,
     State,
-    createStore,
-    Injectable,
-    Inject
+    createProvider,
+    service,
+    Inject,
+    Message,
+    action,
+    store
 }

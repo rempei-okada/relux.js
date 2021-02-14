@@ -2,46 +2,51 @@ import React, { useContext, useReducer, useRef, useEffect } from 'react';
 
 var StoreContext = React.createContext(null);
 
-function Provider(_a) {
-    var children = _a.children, store = _a.store;
-    return (React.createElement(StoreContext.Provider, { value: store }, children));
+function StoreProvider(_a) {
+    var children = _a.children, provider = _a.provider;
+    return (React.createElement(StoreContext.Provider, { value: provider }, children));
 }
 
-var useStore = function () {
-    var store = useContext(StoreContext);
-    if (store) {
-        return store;
+var useProvider = function () {
+    var prider = useContext(StoreContext);
+    if (prider) {
+        return prider;
     }
     else {
         throw new Error("Store is not specified");
     }
 };
 
-var useObserver = function (selector) {
+var useObserver = function (storeType, selector) {
+    var _selector = selector || (function (s) { return s; });
     var _a = useReducer(function (s) { return s + 1; }, 0), forceRender = _a[1];
-    var store = useStore();
-    var state = useRef(selector(store.getState()));
+    var provider = useProvider();
+    var state = useRef(_selector(provider.resolve(storeType).state));
     useEffect(function () {
-        var subscription = store.subscribe(function (e) {
-            var newState = selector(store.getState());
+        var store = provider.resolve(storeType);
+        var subscription = store.subscribe(function (_) {
+            var newState = _selector(store.state);
             if (state.current !== newState) {
                 state.current = newState;
                 forceRender();
             }
         });
         return function () { return subscription.dispose(); };
-    }, [store]);
-    return selector(store.getState());
+    }, [provider]);
+    return _selector(provider.resolve(storeType).state);
 };
 
-var useDispatch = function () {
-    var store = useContext(StoreContext);
-    if (store) {
-        return store.dispatch.bind(store);
+var useDispatch = function (storeType) {
+    var provider = useContext(StoreContext);
+    if (provider) {
+        if (storeType) {
+            return provider.resolve(storeType).dispatch.bind(provider);
+        }
+        return provider.dispatch.bind(provider);
     }
     else {
         throw new Error("Store is not specified");
     }
 };
 
-export { Provider, StoreContext, useDispatch, useObserver, useStore };
+export { StoreContext, StoreProvider, useDispatch, useObserver, useProvider };

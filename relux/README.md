@@ -62,6 +62,8 @@ Each feature can be sliced. A combination of multiple actions and one state is c
 
 All examples are written in TypeScript, but JavaScript can also be used.
 
+# Counter Example
+
 ## Create Initial State
 
 Create two slices of ```counter``` and ```Fib```.
@@ -98,98 +100,118 @@ export interface FibState {
 }
 ```
 
+## Change state
+
+To change the state, Dispatch Action by message and you need to Mutate via Mutation in it.
+Mutation should only contain logic to generate new state from old state or message type. Therefore, Mutation must be a pure function. This makes it easier to keep track of state changes and to perform time travel.
+
+It is not recommended to deal with side effects in Mutation. Therefore, data processing using asynchronous, side effects, etc. should be done in Action.
+
+In the following example, the Decorator is used to bind the Actoin and Message to be Dispach.
+
+
+```ts
+import { Store, State, Message, action, store } from "relux.js";
+
+// Mutaion messages for mutation
+class CountUp extends Message { }
+class BeginLoading extends Message { }
+class EndLoading extends Message { }
+
+// Action messages for dispatch action
+export class CountUpWithTimer extends Message {
+    constructor(readonly timeout: number) { super(); }
+}
+
+// specify store name
+@store({ name: "CounterStore" })
+export class CounterStore extends Store<CounterState> {
+    constructor() {
+        super(new CounterState(), CounterStore.mutation);
+    }
+
+    private static mutation(state: CounterState, message: Message): CounterState {
+        switch (true) {
+            case message instanceof BeginLoading:
+                return state.clone({
+                    isLoading: true
+                });
+            case message instanceof EndLoading:
+                return state.clone({
+                    isLoading: false
+                });
+            case message instanceof CountUp:
+                const payload = message as CountUp;
+                return state.clone({
+                    count: state.count + 1
+                });
+            default:
+                return state;
+        }
+    }
+
+    @action(CountUpWithTimer)
+    protected async countUpWithTimer(message: CountUpWithTimer): Promise<void> {
+        this.mutate(new BeginLoading);
+
+        await this.delay(message.timeout);
+
+        this.mutate(new CountUp);
+        this.mutate(new EndLoading);
+    }
+
+    private async delay(timeout: number) {
+        await new Promise(resolve => setTimeout(resolve, timeout));
+    }
+}
+```
+
+In an environment that Decorator is not available, you can also the following
+
+```ts
+export class CounterStore extends Store<CounterState> {
+    // store name
+    static slice = "CounterStore";
+
+    constructor() {
+        super(new CounterState(), CounterStore.mutation);
+
+        // bind message to action
+        this.bindAction(CountUpWithTimer, this.countUpWithTimer);
+    }
+
+    private static mutation(state: CounterState, message: Message): CounterState {
+        ...
+    }
+
+    protected async countUpWithTimer(message: CountUpWithTimer): Promise<void> {
+        ...
+    }
+}
+```
+
 ## Create a store instance.
 
 Please register the slice. Also, for services, specify the service described below for which you want to inject dependencies.
 
 ```ts
-import { createStore } from "relux.js";
+import { createProvider } from "relux.js";
 
-export const store = createStore({
-    slices: {
-        counter: {
-            name: "counter",
-            actions: [
-                AsyncIncrementCountAction
-            ],
-            // class instance
-            state: new CounterState()
-        },
-        fib: {
-            name: "fib",
-            actions: [
-                IncrementalFibonacciAction,
-            ],
-            // plane object
-            state: {
-                n: 0,
-                count: 0
-            }
-        }
-    },
-    // Register services that resolves in actions
+export const provider = createProvider({
+    stores: [CounterStore, FibStore],
     services: [
         FibonacciService
     ]
 });
-
-// Export RootState Type
-export type RootState = ReturnType<typeof store.getState>;
 ```
 
-## Create Actions
-
-To create an action, you need to extends ```Action<TState,  Tpayload>``` class. The class name is the action name. For TState, specify the type of the state, and for TPayload, specify the type of the argument received by the invoke method.
-When you dispatch an Action, the invoke method is called.
-
-class name is used as the action name, but when minify and compressing the class name with Bandler, it can be overridden by declaring the ```name``` property.
-
-```ts
-class HogeState extends State<HogeState> {
-    hoge = 12345678;
-}
-
-interface HogePayload { hoge: number; }
-
-class HogeAction extends Action<HogeState, HogePayload> {
-    readonly name = "OverriddenHogeActionName";
-
-    invoke(payload: HogePayload): Feature<HogeState> {
-        return ({ mutate }) => {
-            mutate(s => s.clone({ hoge: payload.hoge }));
-        };
-    }
-}
-
-store.dispatch(HogeAction, { hoge: 123456 });
-```
-
-### This is an example action for counter.
-
-```ts
-import { Action, Feature } from "relux.js";
-
-/**
- * Increment counter with delay.
- */
-export class AsyncIncrementCountAction extends Action<CounterState, number>  {
-    public invoke(timeout: number): Feature<CounterState> {
-        return async ({ mutate, state }) => {
-            await new Promise(resolve => setTimeout(resolve, timeout));
-            mutate(s => s.clone({
-                count: s.count + 1
-            }))
-        };
-    }
-}
-```
 
 ## Dispatch an action and change states
 
 States will change after 1000ms.
 
 ```ts
-store.dispatch(AsyncIncrementCountAction, 1000);
+provider.dispatch(new CountUpWithTimer(100));
 ```
 
 ## Subscribe on states changed
@@ -197,7 +219,7 @@ store.dispatch(AsyncIncrementCountAction, 1000);
 Called 1000ms after dispatching.
 
 ```ts
-store.subscribe(e => {
+provider.subscribe(e => {
     console.log(`Counter: ${e.state.count}`);
     console.log(`Slice Name: ${e.sliceName}`);
 });
@@ -206,27 +228,190 @@ store.subscribe(e => {
 ## Dispatch another action in an action
 
 ```ts
-import { Action, Feature } from "relux.js";
+import { Store, State, Message, action, store } from "relux.js";
 
-/**
- * Increment counter with delay.
- */
-export class AsyncIncrementCountAction extends Action<CounterState, number>  {
-    public invoke(timeout: number): Feature<CounterState> {
-        return async ({ mutate, state }) => {
-            await new Promise(resolve => setTimeout(resolve, timeout));
-            mutate(s => s.clone({
-                count: s.count + 1
-            }));
+// Mutaion messages for mutation
+class HogeMessage extends Message { }
 
-            // Dispatch another slice action
-            dispatch(AsyncIncrementCountAction, 1000);
-        };
+@store({ name: "HogeStore" })
+class HogeStore {
+    constructor(readonly counter: CounterStore) {
+        super(..., ...);
+    }
+
+    @action(HogeMessage)
+    hogeCounter(_: HogeMessage){
+        this.mutate(...);
+        // Dispatch CounterStore action
+        await this.counter.dispatch(new CountUpWithTimer(1000));
+        this.mutate(...);
+        this.mutate(...);
     }
 }
 ```
 
-## With React
+
+## Dependency Injection
+
+Services implemented as side effects such as HTTP Requests, asynchronous, DB access, and algorithm implementation can be accessed from actions using dependency injection.
+
+### Create a service and register
+
+Create a service that generate fibonacci number.
+
+```ts
+import { Store, service, store, action, Message } from "relux.js";
+
+const fibState = {
+    n: 0,
+    count: 0,
+    history: [] as number[]
+}
+
+type FibState = typeof fibState;
+
+@service()
+export class FibonacciService {
+    public fib(n: number): number {
+        if (n < 3) return 1;
+        return this.fib(n - 1) + this.fib(n - 2);
+    }
+}
+
+class SetFib extends Message {
+    constructor(readonly fib: number) { super(); }
+}
+export class CalcFib extends Message { }
+
+/**
+ * Increament fibonacci counter action.
+ */
+@store({ name: "fib" })
+export class FibStore extends Store<FibState> {
+    constructor(readonly fibService: FibonacciService) {
+        super(fibState, FibStore.update);
+    }
+
+    static update(state: FibState, message: Message): FibState {
+        switch (true) {
+            case message instanceof SetFib:
+                const payload = message as SetFib;
+                return {
+                    ...state,
+                    n: state.n + 1,
+                    count: payload.fib,
+                    history: [...state.history, payload.fib]
+                }
+            default: return state;
+        }
+    }
+
+    @action(CalcFib)
+    calc(_: CalcFib) {
+        if (this.state.n < 40 === false) {
+            return;
+        }
+
+        const fib = this.fibService.fib(this.state.n);
+        this.mutate(new SetFib(fib));
+    }
+}
+```
+
+You must register a Service to ```option.services``` when creating a store instance.
+
+```ts
+const provider = createProvider({
+ slices: { ... },
+ services: [
+     FibonacciService
+ ]
+});
+```
+
+### Resolve with Decorator
+
+Give your class ```@service``` decorator.
+After that, just specify the type in the constructor argument and it will be assigned automatically without doing anything special.
+
+```ts
+import { service } from "relux.js";
+
+@service()
+class FooService {
+  async invoke() {
+      return ...;
+  }
+}
+
+class HogeService {
+    constructor(readonly fooService: FooService){}
+
+    async call() {
+        return await this.fooService.invoke();
+    }
+}
+
+class TestMessage extends Message {}
+class SetTest extends Message {
+    constructor(readonly test: string) {}
+}
+
+@store({ name: "TestStore"})
+class TestStore extends Store<...> {
+    constructor(readonly hogeService: HogeService) {}
+
+    @action(TestMessage)
+    async invoke(_: TestMessage) {
+        const result = await this.hogeService.call();
+        this.mutate(new SetTest(result));
+    }
+}
+```
+
+### Resolve without Decorator
+
+If you define a static property ```parameters``` that return definition array to inject a dependency, the service will be automatically assigned to constructor arguments when you dispatch the action. Services can also be nested. 
+parameters must match the constructor arguments exactly.
+
+```ts
+import { service } from "relux.js";
+
+class FooService {
+  async invoke() {
+      return ...;
+  }
+}
+
+class HogeService {
+    static parameters = [FooService];
+    constructor(readonly fooService: FooService){}
+
+    async call() {
+        return await this.fooService.invoke();
+    }
+}
+
+class TestMessage extends Message {}
+class SetTest extends Message {
+    constructor(readonly test: string) {}
+}
+
+class TestStore extends Store<...> {
+    static parameters = [HogeService];
+
+    constructor(readonly hogeService: HogeService) {
+        this.bindAction(TestMessage, this.invoke);
+    }
+
+    async invoke(_: TestMessage) {
+        const result = await this.hogeService.call();
+        this.mutate(new SetTest(result));
+    }
+}
+```
+
+# With React
 
 An Example for React. Update state and render with Hooks.
 
@@ -245,12 +430,12 @@ export default () => {
 };
 
 function Counter() {
-    const store = useStore();
-    const counter = useObserver((s: RootState) => s.counter);
-    const next = useObserver((s: RootState) => s.counter.next);
+    const provider = useProvider();
+    const counter = useObserver(CounterStore);
+    const next = useObserver(CounterStore, s => s.next);
 
     function increment() {
-        store.dispatch(AsyncIncrementCountAction, 1000)
+        provider.dispatch(new CountUpWithTimer(1000))
     }
 
     return (
@@ -267,7 +452,7 @@ function Counter() {
 
 function FibCounter() {
     const dispatch = useDispatch();
-    const counter = useObserver((s: RootState) => s.fib);
+    const counter = useObserver(FibStore);
 
     function increment() {
         dispatch(IncrementalFibonacciAction, undefined)
@@ -286,76 +471,7 @@ function FibCounter() {
 }
 ```
 
-## Dependency Injection
-
-Services implemented as side effects such as HTTP Requests, asynchronous, DB access, and algorithm implementation can be accessed from actions using dependency injection.
-
-### Create a service and register
-
-Create a service that generate fibonacci number.
-
-```ts
-class FibonacciService {
-    public fib(n: number) {
-        if (n < 3) return 1;
-        return this.fib(n - 1) + this.fib(n - 2);
-    }
-}
-```
-
-You must register a Service to ```option.services``` when creating a store instance.
-
-```ts
-const store = createStore({
- slices: { ... },
- services: [
-     FibonacciService
- ]
-});
-```
-
-### Resolve without Decorator
-
-If you define a static property ```parameters``` that return definition array to inject a dependency, the service will be automatically assigned to constructor arguments when you dispatch the action. Services can also be nested. 
-parameters must match the constructor arguments exactly.
-
-```ts
-/**
- * Increament fibonacci counter action.
- */
-export class IncrementalFibonacciAction extends Action<FibState, undefined> {
-    static parameters = [FibonacciService];
-
-    // Assign a service automatically.
-    constructor(private readonly fibService: FibonacciService) { 
-        super();
-    }
-
-    public invoke(_: undefined): Feature<FibState> {
-        return ({ dispatch, mutate, state }) => {
-            if (state.n < 40 === false) {
-                return;
-            }
-
-            const fib = this.fibService.fib(state.n + 1);
-
-            // update state
-            mutate(s => ({
-                ...s,
-                count: fib,
-                n: s.n + 1
-            }));
-
-            // Dispatch another slice action
-            dispatch(AsyncIncrementCountAction, 1000);
-        };
-    }
-}
-```
-
-### Resolve with Decorator
-
-#### Setup
+#### Use Decorator Setup with React
 
 Also for TypeScript you will need to enable ```experimentalDecorators``` and ```emitDecoratorMetadata``` flags within your tsconfig.json
 
@@ -377,44 +493,5 @@ Add the following configuration to your ```.babelrc``` or ```babel.config.js``` 
 ["babel-plugin-transform-typescript-metadata"]
 ```
 
-Give your class ```@Injectable``` decorator.
-After that, just specify the type in the constructor argument and it will be assigned automatically without doing anything special.
-
-```ts
-import { Injectable } from "relux.js";
-
-/**
- * Increament fibonacci counter action.
- */
-@Injectable()
-export class IncrementalFibonacciAction extends Action<FibState, undefined> {
-    constructor(private readonly fibService: FibonacciService) { 
-        super();
-    }
-
-    public invoke(_: undefined): Feature<FibState> {
-        return ({ dispatch, mutate, state }) => {
-            if (state.n < 40 === false) {
-                return;
-            }
-
-            const fib = this.fibService.fib(state.n + 1);
-
-            // update state
-            mutate(s => ({
-                ...s,
-                count: fib,
-                n: s.n + 1
-            }));
-
-            // Dispatch another slice action
-            dispatch(AsyncIncrementCountAction, 1000);
-        };
-    }
-}
-```
-
 # License
-Designed with ♥ Renpei Okada. Licensed under the MIT License.
-
-# Have a nice development life ♥
+Designed with ♥ Rempei Okada. Licensed under the MIT License.

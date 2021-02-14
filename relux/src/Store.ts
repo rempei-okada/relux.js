@@ -1,124 +1,195 @@
 import { ReflectiveInjector, Injectable, Injector } from "injection-js";
-import { constructor } from "./Feature";
-import { Action } from "Action";
-import { StoreOption } from "createStore";
+import { constructor } from "./constructor";
 
 interface StateChangedEventArgs<TState> {
-    state: ValueOf<TState>;
-    slice: keyof TState;
-    action: string;
+    state: TState;
+    store: string;
+    message: Message;
 }
-
-type ValueOf<T> = T[keyof T];
 
 interface Subscription {
     dispose: () => void;
 }
 
-export interface Slice<T = any> {
-    name: string;
-    actions: constructor<Action<T, any>>[];
-    state: T;
-}
+export abstract class Message { }
 
-export class Store<TRootState = any> {
-    private state!: TRootState;
-    private _observers: ((params: StateChangedEventArgs<TRootState>) => void)[] = [];
-    private readonly _container: ReflectiveInjector;
-    private slices: Slice[] = [];
-    private actionInfos: { [key: string]: { sliceName: string } } = {};
+type MutationMethod<TState> = (state: TState, message: Message) => TState;
 
-    constructor(option: StoreOption<TRootState>) {
-        const ctors = [];
+type ActionMethod<TMessage extends Message = Message> = (message: TMessage) => Promise<void>;
 
-        for (const key in option.slices) {
-            const slice = option.slices[key];
-            this.slices = [...this.slices, slice];
-            for (const action of slice.actions) {
-                ctors.push(action);
-                this.actionInfos[action as any as string] = { sliceName: slice.name };
-                this.state = { ...this.state, [slice.name]: slice.state };
-            }
+export abstract class Store<TState = object> {
+    private _state: TState;
+    private observers: Observer<TState>[] = [];
+    private readonly mutation: MutationMethod<TState>;
+
+    public static slice = "";
+    public static parameters: constructor<any>[] = [];
+
+    private get _actions(): Map<constructor<Message>, ActionMethod> {
+        if (!(this.constructor.prototype as any).toBindActions) {
+            (this.constructor.prototype as any) = new Map();
         }
+        return (this.constructor.prototype as any).toBindActions;
+    }
 
-        if (option.services) {
-            for (const s of option.services) {
-                ctors.push(s);
-            }
+    public get state(): TState {
+        return this._state;
+    }
+
+    constructor(initialState: TState, mutation: MutationMethod<TState>) {
+        this._state = initialState;
+        this.mutation = mutation;
+    }
+
+    public bindAction<TMessage extends Message>(messageType: constructor<TMessage>, action: ActionMethod<TMessage>): ({ dispose: () => void }) {
+        if (this._actions.has(messageType)) {
+            throw new Error(`Action "${messageType.name} : ${action.name} is already exists."`);
         }
-
-        this._container = ReflectiveInjector.resolveAndCreate(ctors);
-    }
-
-    public getState(): TRootState {
-        return this.state;
-    }
-
-    public mutate<T extends keyof TRootState>(
-        sliceName: T,
-        mutation: (state: TRootState[T]) => TRootState[T],
-        action: string = "no action"
-    ): void {
-        const old = this.state[sliceName];
-        const newState = mutation(old);
-        this.state = {
-            ...this.state,
-            [sliceName]: newState
-        };
-        this.invokeObservers(sliceName, newState, action);
-    }
-
-    public async dispatch
-        <
-            TState,
-            TPayload
-        >(
-            ctor: constructor<Action<TState, TPayload>>,
-            payload: TPayload
-        ): Promise<void> {
-        const action = this._container.get(ctor) as Action<TState, TPayload>;
-
-        const sliceName = this.getSliceNameFromAction(ctor);
-        const state = (this.getState() as any)[sliceName] as TState;
-
-        if (!state) {
-            throw new Error(`Slice "${sliceName}" is not found.`);
+        else {
+            this._actions.set(messageType, action as ActionMethod);
         }
-
-        const feature = action.invoke(payload);
-        feature({
-            dispatch: (ctor, payload) => this.dispatch(ctor, payload),
-            mutate: m => this.mutate(
-                sliceName as any,
-                m as any,
-                (action as any).name || ctor.name
-            ),
-            state: state
-        });
-    }
-
-    public subscribe(observer: ((params: StateChangedEventArgs<TRootState>) => void)): Subscription {
-        this._observers = [...this._observers, observer];
 
         return {
             dispose: () => {
-                this._observers = this._observers.filter(o => o !== observer);
+                this._actions.delete(messageType);
             }
         };
     }
 
-    private getSliceNameFromAction<TState, TPayload>(action: constructor<Action<TState, TPayload>>): string {
-        const slice = this.actionInfos[action as any as string];
-        if (!slice) {
-            throw new Error(`Action ${action} is not registerd.`);
-        }
+    protected mutate(message: Message): void {
+        this._state = this.mutation(this._state, message);
 
-        return slice.sliceName;
+        for (const observer of this.observers) {
+            observer({
+                message: message,
+                store: (this.constructor as any).slice || this.constructor.name,
+                state: this.state
+            })
+        }
     }
 
-    private invokeObservers(slice: keyof TRootState, state: ValueOf<TRootState>, action: string) {
-        for (const observer of this._observers) {
-            observer({ action, state, slice });
+    public async dispatch(message: Message): Promise<void> {
+        const action = this._actions.get(message.constructor as constructor<Message>);
+        if (!action) {
+            throw new Error(`Message "${message.constructor.name} is not registered`);
         }
+
+        await action.bind(this)(message);
+    }
+
+    public subscribe(observer: (e: StateChangedEventArgs<TState>) => void): Subscription {
+        this.observers = [...this.observers, observer];
+
+        return {
+            dispose: () => {
+                this.observers = this.observers.filter(o => o !== observer);
+            }
+        };
+    }
+}
+
+export interface StoreOption {
+    stores: constructor<Store<any>>[];
+    services?: constructor<object>[];
+}
+
+type Observer<TState> = (e: StateChangedEventArgs<TState>) => void;
+type StoreDecorator = <TStore extends Store<TState>, TState>
+    (target: StoreClass<TStore, TState>) => StoreClass<TStore, TState>;
+
+export type StoreClass<TStore extends Store<TState>, TState> = {
+    new(...args: any[]): TStore & Store<TState>;
+};
+
+export function store({ name }: { name: string }): any {
+    return function (ctor: any) {
+        if (!(ctor.prototype instanceof Store)) {
+            throw new Error("@store() decorator class must extends Store class.");
+        }
+
+        ctor.slice = name;
+
+        return Injectable()(ctor);
+    } as any;
+}
+
+export function action(message: constructor<Message>) {
+    return function (target: Store, _: string, desc: PropertyDescriptor) {
+        if (!(target as any).toBindActions) {
+            (target as any).toBindActions = new Map();
+        }
+
+        if (target instanceof Store) {
+            (target as any).toBindActions.set(message, desc.value);
+        }
+        else {
+            throw new Error(`@Action(Message) decorator can use in Store<TState> class only.`)
+        }
+    }
+}
+
+export class Provider<TRootState = { [key: string]: any }> {
+    private readonly _container: ReflectiveInjector;
+    private readonly _storesDefines: { name: string, type: constructor<object> }[];
+    private observers: Observer<object>[] = [];
+
+    public getRootStateTree(): TRootState {
+        return this._storesDefines.reduce((x, y) => ({
+            ...x,
+            [y.name]: this._container.get(y.type).state
+        }), {} as TRootState);
+    }
+
+    constructor(option: StoreOption) {
+        this._container = ReflectiveInjector.resolveAndCreate([
+            ...option.services || [],
+            ...option.stores
+        ]);
+
+        for (const ctor of option.stores) {
+            const store = this._container.get(ctor) as Store;
+
+            store.subscribe((e: StateChangedEventArgs<object>) => {
+                for (const observer of this.observers) {
+                    observer(e);
+                }
+            });
+        }
+
+        this._storesDefines = option.stores.map(c => ({
+            name: (c as any).slice,
+            type: c
+        }));
+    }
+
+    public subscribe(observer: (e: StateChangedEventArgs<object>) => void): Subscription {
+        this.observers = [...this.observers, observer];
+
+        return {
+            dispose: () => {
+                this.observers = this.observers.filter(o => o !== observer);
+            }
+        };
+    }
+
+    public async dispatch(message: Message): Promise<void> {
+        for (const s of this._storesDefines) {
+            const store = this._container.get(s.type) as Store;
+            if (store) {
+                try {
+                    await store.dispatch(message);
+                    return;
+                }
+                catch {
+
+                }
+            }
+        }
+
+        throw new Error(`${message.constructor.name} is not bound with action. `)
+    }
+
+    public resolve(type: constructor<any>) {
+        return this._container.get(type);
     }
 }

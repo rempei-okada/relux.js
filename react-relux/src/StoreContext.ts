@@ -1,4 +1,4 @@
 import React from "react";
-import { Store } from "relux.js";
+import { Provider } from "relux.js";
 
-export const StoreContext = React.createContext<Store | null>(null);
+export const StoreContext = React.createContext<Provider | null>(null);

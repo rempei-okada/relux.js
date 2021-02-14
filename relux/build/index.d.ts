@@ -1,8 +1,8 @@
 import 'reflect-metadata';
-import { Store } from "./Store";
-import { Action } from "./Action";
+import { Store, Provider, Message, action, store } from "./Store";
 import { State } from "./State";
-import { createStore } from "./createStore";
-import { Injectable, Inject } from "injection-js";
-export * from "./Feature";
-export { Store, Action, State, createStore, Injectable, Inject };
+import { createProvider } from "./createProvider";
+import { Inject } from "injection-js";
+export * from "./constructor";
+declare function service(): any;
+export { Store, Provider, State, createProvider, service, Inject, Message, action, store };

@@ -99,9 +99,9 @@ export interface FibState {
 初期値やアクション、後述するServiceを登録してStoreインスタンスを作成しましょう. Serviceを登録するとDIすることができます.
 
 ```ts
-import { createStore } from "relux.js";
+import { createProvider } from "relux.js";
 
-export const store = createStore({
+export const store = createProvider({
     slices: {
         counter: {
             name: "counter",
@@ -302,7 +302,7 @@ class FibonacciService {
 You must register a Service to ```option.services``` when creating a store instance.
 
 ```ts
-const store = createStore({
+const store = createProvider({
  slices: { ... },
  services: [
      FibonacciService

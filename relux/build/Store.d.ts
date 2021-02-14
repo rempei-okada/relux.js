@@ -1,32 +1,53 @@
-import { constructor } from "./Feature";
-import { Action } from "Action";
-import { StoreOption } from "createStore";
+import { constructor } from "./constructor";
 interface StateChangedEventArgs<TState> {
-    state: ValueOf<TState>;
-    slice: keyof TState;
-    action: string;
+    state: TState;
+    store: string;
+    message: Message;
 }
-declare type ValueOf<T> = T[keyof T];
 interface Subscription {
     dispose: () => void;
 }
-export interface Slice<T = any> {
-    name: string;
-    actions: constructor<Action<T, any>>[];
-    state: T;
+export declare abstract class Message {
 }
-export declare class Store<TRootState = any> {
-    private state;
-    private _observers;
+declare type MutationMethod<TState> = (state: TState, message: Message) => TState;
+declare type ActionMethod<TMessage extends Message = Message> = (message: TMessage) => Promise<void>;
+export declare abstract class Store<TState = object> {
+    private _state;
+    private observers;
+    private readonly mutation;
+    static slice: string;
+    static parameters: constructor<any>[];
+    private get _actions();
+    get state(): TState;
+    constructor(initialState: TState, mutation: MutationMethod<TState>);
+    bindAction<TMessage extends Message>(messageType: constructor<TMessage>, action: ActionMethod<TMessage>): ({
+        dispose: () => void;
+    });
+    protected mutate(message: Message): void;
+    dispatch(message: Message): Promise<void>;
+    subscribe(observer: (e: StateChangedEventArgs<TState>) => void): Subscription;
+}
+export interface StoreOption {
+    stores: constructor<Store<any>>[];
+    services?: constructor<object>[];
+}
+export declare type StoreClass<TStore extends Store<TState>, TState> = {
+    new (...args: any[]): TStore & Store<TState>;
+};
+export declare function store({ name }: {
+    name: string;
+}): any;
+export declare function action(message: constructor<Message>): (target: Store, _: string, desc: PropertyDescriptor) => void;
+export declare class Provider<TRootState = {
+    [key: string]: any;
+}> {
     private readonly _container;
-    private slices;
-    private actionInfos;
-    constructor(option: StoreOption<TRootState>);
-    getState(): TRootState;
-    mutate<T extends keyof TRootState>(sliceName: T, mutation: (state: TRootState[T]) => TRootState[T], action?: string): void;
-    dispatch<TState, TPayload>(ctor: constructor<Action<TState, TPayload>>, payload: TPayload): Promise<void>;
-    subscribe(observer: ((params: StateChangedEventArgs<TRootState>) => void)): Subscription;
-    private getSliceNameFromAction;
-    private invokeObservers;
+    private readonly _storesDefines;
+    private observers;
+    getRootStateTree(): TRootState;
+    constructor(option: StoreOption);
+    subscribe(observer: (e: StateChangedEventArgs<object>) => void): Subscription;
+    dispatch(message: Message): Promise<void>;
+    resolve(type: constructor<any>): any;
 }
 export {};

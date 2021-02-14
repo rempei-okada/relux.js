@@ -1,6 +1,6 @@
-import { Provider } from "./Provider";
+import { StoreProvider } from "./Provider";
 import { StoreContext } from "./StoreContext";
 import { useObserver } from "./useObserver";
-import { useStore } from "./useStore";
 import { useDispatch } from "./useDispatch";
-export { Provider, StoreContext, useStore, useObserver, useDispatch };
+import { useProvider } from "./useProvider";
+export { StoreProvider, StoreContext, useObserver, useDispatch, useProvider };

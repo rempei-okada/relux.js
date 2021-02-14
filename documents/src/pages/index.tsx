@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Provider, useStore, useObserver } from "react-relux";
-import { AsyncIncrementCountAction } from "../demo/counter";
-import { IncrementalFibonacciAction } from "../demo/fibonacci";
-import { RootState, store } from "../demo/store";
+import { StoreProvider, useProvider, useObserver } from "react-relux";
+import { CounterStore, CountUpWithTimer } from "../demo/counter";
+import { FibStore, CalcFib } from "../demo/fibonacci";
+import { provider } from "../demo/store";
 
 export default () => {
     return (
-        <Provider store={store}>
+        <StoreProvider provider={provider}>
             <div style={{ display: "flex" }}>
                 <div style={{ padding: "24px" }}>
                     <Counter />
@@ -16,17 +16,18 @@ export default () => {
                     <History />
                 </div>
             </div>
-        </Provider>
+        </StoreProvider>
     );
 };
 
 function Counter() {
-    const store = useStore();
-    const count = useObserver((s: RootState) => s.counter.count);
-    const next = useObserver((s: RootState) => s.counter.next);
+    const provider = useProvider();
+    const count = useObserver(CounterStore, s => s.count);
+    const next = useObserver(CounterStore, s => s.next);
+    const counter = useObserver(CounterStore, s => s);
 
     function increment() {
-        store.dispatch(AsyncIncrementCountAction, 1000)
+        provider.dispatch(new CountUpWithTimer(1000));
     }
 
     return (
@@ -36,17 +37,18 @@ function Counter() {
             <p>Counter will increment after 1000ms</p><br />
             <div>Count: {count}</div>
             <div>Next: {next}</div>
+            <div>isLoading : {counter.isLoading ? "YES" : "NO"}</div>
             <br />
         </div>
     );
 }
 
 function FibCounter() {
-    const store = useStore();
-    const counter = useObserver((s: RootState) => s.fib);
+    const privider = useProvider();
+    const counter = useObserver(FibStore, s => s);
 
     function increment() {
-        store.dispatch(IncrementalFibonacciAction, undefined)
+        privider.dispatch(new CalcFib());
     }
 
     return (
@@ -57,20 +59,19 @@ function FibCounter() {
             <p>Counter will increment after 1000ms</p><br />
             <div>Fib: {counter.count}</div>
             <div>N: {counter.n}</div>
-            <div style={{ maxWidth: "340px" }}>History: {counter.history.map(h => `${h}, `)}</div>
+            <div style={{ maxWidth: "340px" }}>History: [{counter.history.map(h => `${h}, `)}]</div>
         </div>
     );
 }
 
 function History() {
-    const store = useStore<RootState>();
+    const provider = useProvider();
     const [histories, setHistories] = useState<any[]>([]);
     const i = useRef(0);
 
-
     useEffect(() => {
-        const s = store.subscribe(e => {
-            setHistories([...histories, { key: i.current, ...e }]);
+        const s = provider.subscribe(e => {
+            setHistories([...histories, { key: i.current, ...e, time: new Date(), root: provider.getRootStateTree() }]);
             i.current++;
         });
 
@@ -87,14 +88,27 @@ function History() {
                 padding: "20px",
             }}>
                 {
-                    histories.map(h => (<div key={h.key}>
-                        <div>Slice: {h.slice}</div>
-                        <div>Action: {h.action}</div>
-                        <div style={{ whiteSpace: "pre", padding: "16px", background: "#f0f0f0" }}>{JSON.stringify(h.state, null, 4)}</div>
+                    histories.map((h, i) => (<>
+                        <details key={h.key}>
+                            <summary>
+                                <div style={{ display: "flex" }}>
+                                    {`${h.key} ${h.store}`}
+                                    <strong style={{ marginLeft: "8px", color: "#11b7af" }}>{h.message.constructor.name}</strong>
+                                    <div style={{ marginLeft: "8px" }}>{toString(h.time)}</div>
+                                </div>
+                            </summary>
+                            <div style={{ whiteSpace: "pre", padding: "16px", background: "#f0f0f0" }}>{JSON.stringify(h.message, null, 4)}</div>
+                            <div>State</div>
+                            <div style={{ whiteSpace: "pre", padding: "16px", background: "#f0f0f0" }}>{JSON.stringify(h.root, null, 4)}</div>
+                        </details>
                         <hr />
-                    </div>))
+                    </>))
                 }
             </div>
         </>
     );
+}
+
+function toString(date: Date) {
+    return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
 }

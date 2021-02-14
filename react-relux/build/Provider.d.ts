@@ -1,8 +1,8 @@
 import React from "react";
-import { Store } from "relux.js";
+import { Provider } from "relux.js";
 interface ProviderProps {
-    store: Store;
+    provider: Provider;
     children: React.ReactNode;
 }
-export declare function Provider({ children, store }: ProviderProps): JSX.Element;
+export declare function StoreProvider({ children, provider }: ProviderProps): JSX.Element;
 export {};

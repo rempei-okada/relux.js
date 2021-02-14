@@ -1,6 +1,6 @@
 import 'reflect-metadata';
-import { ReflectiveInjector } from 'injection-js';
-export { Inject, Injectable } from 'injection-js';
+import { Injectable, ReflectiveInjector } from 'injection-js';
+export { Inject } from 'injection-js';
 
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -74,92 +74,184 @@ function __spreadArrays() {
     return r;
 }
 
-var Store = /** @class */ (function () {
-    function Store(option) {
-        var _a;
-        this._observers = [];
-        this.slices = [];
-        this.actionInfos = {};
-        var ctors = [];
-        for (var key in option.slices) {
-            var slice = option.slices[key];
-            this.slices = __spreadArrays(this.slices, [slice]);
-            for (var _i = 0, _b = slice.actions; _i < _b.length; _i++) {
-                var action = _b[_i];
-                ctors.push(action);
-                this.actionInfos[action] = { sliceName: slice.name };
-                this.state = __assign(__assign({}, this.state), (_a = {}, _a[slice.name] = slice.state, _a));
-            }
-        }
-        if (option.services) {
-            for (var _c = 0, _d = option.services; _c < _d.length; _c++) {
-                var s = _d[_c];
-                ctors.push(s);
-            }
-        }
-        this._container = ReflectiveInjector.resolveAndCreate(ctors);
+var Message = /** @class */ (function () {
+    function Message() {
     }
-    Store.prototype.getState = function () {
-        return this.state;
+    return Message;
+}());
+var Store = /** @class */ (function () {
+    function Store(initialState, mutation) {
+        this.observers = [];
+        this._state = initialState;
+        this.mutation = mutation;
+    }
+    Object.defineProperty(Store.prototype, "_actions", {
+        get: function () {
+            if (!this.constructor.prototype.toBindActions) {
+                this.constructor.prototype = new Map();
+            }
+            return this.constructor.prototype.toBindActions;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Store.prototype, "state", {
+        get: function () {
+            return this._state;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Store.prototype.bindAction = function (messageType, action) {
+        var _this = this;
+        if (this._actions.has(messageType)) {
+            throw new Error("Action \"" + messageType.name + " : " + action.name + " is already exists.\"");
+        }
+        else {
+            this._actions.set(messageType, action);
+        }
+        return {
+            dispose: function () {
+                _this._actions.delete(messageType);
+            }
+        };
     };
-    Store.prototype.mutate = function (sliceName, mutation, action) {
-        var _a;
-        if (action === void 0) { action = "no action"; }
-        var old = this.state[sliceName];
-        var newState = mutation(old);
-        this.state = __assign(__assign({}, this.state), (_a = {}, _a[sliceName] = newState, _a));
-        this.invokeObservers(sliceName, newState, action);
+    Store.prototype.mutate = function (message) {
+        this._state = this.mutation(this._state, message);
+        for (var _i = 0, _a = this.observers; _i < _a.length; _i++) {
+            var observer = _a[_i];
+            observer({
+                message: message,
+                store: this.constructor.slice || this.constructor.name,
+                state: this.state
+            });
+        }
     };
-    Store.prototype.dispatch = function (ctor, payload) {
+    Store.prototype.dispatch = function (message) {
         return __awaiter(this, void 0, void 0, function () {
-            var action, sliceName, state, feature;
-            var _this = this;
+            var action;
             return __generator(this, function (_a) {
-                action = this._container.get(ctor);
-                sliceName = this.getSliceNameFromAction(ctor);
-                state = this.getState()[sliceName];
-                if (!state) {
-                    throw new Error("Slice \"" + sliceName + "\" is not found.");
+                switch (_a.label) {
+                    case 0:
+                        action = this._actions.get(message.constructor);
+                        if (!action) {
+                            throw new Error("Message \"" + message.constructor.name + " is not registered");
+                        }
+                        return [4 /*yield*/, action.bind(this)(message)];
+                    case 1:
+                        _a.sent();
+                        return [2 /*return*/];
                 }
-                feature = action.invoke(payload);
-                feature({
-                    dispatch: function (ctor, payload) { return _this.dispatch(ctor, payload); },
-                    mutate: function (m) { return _this.mutate(sliceName, m, action.name || ctor.name); },
-                    state: state
-                });
-                return [2 /*return*/];
             });
         });
     };
     Store.prototype.subscribe = function (observer) {
         var _this = this;
-        this._observers = __spreadArrays(this._observers, [observer]);
+        this.observers = __spreadArrays(this.observers, [observer]);
         return {
             dispose: function () {
-                _this._observers = _this._observers.filter(function (o) { return o !== observer; });
+                _this.observers = _this.observers.filter(function (o) { return o !== observer; });
             }
         };
     };
-    Store.prototype.getSliceNameFromAction = function (action) {
-        var slice = this.actionInfos[action];
-        if (!slice) {
-            throw new Error("Action " + action + " is not registerd.");
-        }
-        return slice.sliceName;
-    };
-    Store.prototype.invokeObservers = function (slice, state, action) {
-        for (var _i = 0, _a = this._observers; _i < _a.length; _i++) {
-            var observer = _a[_i];
-            observer({ action: action, state: state, slice: slice });
-        }
-    };
+    Store.slice = "";
+    Store.parameters = [];
     return Store;
 }());
-
-var Action = /** @class */ (function () {
-    function Action() {
+function store(_a) {
+    var name = _a.name;
+    return function (ctor) {
+        if (!(ctor.prototype instanceof Store)) {
+            throw new Error("@store() decorator class must extends Store class.");
+        }
+        ctor.slice = name;
+        return Injectable()(ctor);
+    };
+}
+function action(message) {
+    return function (target, _, desc) {
+        if (!target.toBindActions) {
+            target.toBindActions = new Map();
+        }
+        if (target instanceof Store) {
+            target.toBindActions.set(message, desc.value);
+        }
+        else {
+            throw new Error("@Action(Message) decorator can use in Store<TState> class only.");
+        }
+    };
+}
+var Provider = /** @class */ (function () {
+    function Provider(option) {
+        var _this = this;
+        this.observers = [];
+        this._container = ReflectiveInjector.resolveAndCreate(__spreadArrays(option.services || [], option.stores));
+        for (var _i = 0, _a = option.stores; _i < _a.length; _i++) {
+            var ctor = _a[_i];
+            var store_1 = this._container.get(ctor);
+            store_1.subscribe(function (e) {
+                for (var _i = 0, _a = _this.observers; _i < _a.length; _i++) {
+                    var observer = _a[_i];
+                    observer(e);
+                }
+            });
+        }
+        this._storesDefines = option.stores.map(function (c) { return ({
+            name: c.slice,
+            type: c
+        }); });
     }
-    return Action;
+    Provider.prototype.getRootStateTree = function () {
+        var _this = this;
+        return this._storesDefines.reduce(function (x, y) {
+            var _a;
+            return (__assign(__assign({}, x), (_a = {}, _a[y.name] = _this._container.get(y.type).state, _a)));
+        }, {});
+    };
+    Provider.prototype.subscribe = function (observer) {
+        var _this = this;
+        this.observers = __spreadArrays(this.observers, [observer]);
+        return {
+            dispose: function () {
+                _this.observers = _this.observers.filter(function (o) { return o !== observer; });
+            }
+        };
+    };
+    Provider.prototype.dispatch = function (message) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _i, _a, s, store_2;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0:
+                        _i = 0, _a = this._storesDefines;
+                        _c.label = 1;
+                    case 1:
+                        if (!(_i < _a.length)) return [3 /*break*/, 6];
+                        s = _a[_i];
+                        store_2 = this._container.get(s.type);
+                        if (!store_2) return [3 /*break*/, 5];
+                        _c.label = 2;
+                    case 2:
+                        _c.trys.push([2, 4, , 5]);
+                        return [4 /*yield*/, store_2.dispatch(message)];
+                    case 3:
+                        _c.sent();
+                        return [2 /*return*/];
+                    case 4:
+                        _c.sent();
+                        return [3 /*break*/, 5];
+                    case 5:
+                        _i++;
+                        return [3 /*break*/, 1];
+                    case 6: throw new Error(message.constructor.name + " is not bound with action. ");
+                }
+            });
+        });
+    };
+    Provider.prototype.resolve = function (type) {
+        return this._container.get(type);
+    };
+    return Provider;
 }());
 
 /**
@@ -188,11 +280,13 @@ var State = /** @class */ (function () {
 /**
  * Create a store.
  * @param option store option
- * @typedef TRootState RootState type
  */
-function createStore(option) {
-    var store = new Store(option);
-    return store;
+function createProvider(option) {
+    return new Provider(option);
 }
 
-export { Action, State, Store, createStore };
+function service() {
+    return Injectable();
+}
+
+export { Message, Provider, State, Store, action, createProvider, service, store };

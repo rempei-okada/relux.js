@@ -1,6 +1,6 @@
 {
   "name": "react-relux",
-  "version": "0.1.10",
+  "version": "1.0.0",
   "description": "Relux.js binding for react. Relux is a Flexible and easy state management container for React or other javascript apps with TypeScript, supports class-based Object-Oriented-Programming and Dependency Injection.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -47,6 +47,6 @@
   },
   "peerDependencies": {
     "react": "^16.8.3 || ^17",
-    "relux.js": "^0.1.14"
+    "relux.js": "^1.0.0"
   }
 }

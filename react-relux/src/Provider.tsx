@@ -1,15 +1,15 @@
 import React from "react";
-import { Store } from "relux.js";
+import { Provider } from "relux.js";
 import { StoreContext } from "./StoreContext";
 
 interface ProviderProps {
-    store: Store;
+    provider: Provider;
     children: React.ReactNode;
 }
 
-export function Provider({ children, store }: ProviderProps) {
+export function StoreProvider({ children, provider }: ProviderProps) {
     return (
-        <StoreContext.Provider value={store}>
+        <StoreContext.Provider value={provider}>
             {children}
         </StoreContext.Provider>
     );
