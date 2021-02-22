@@ -88,7 +88,7 @@ var Store = /** @class */ (function () {
     Object.defineProperty(Store.prototype, "_actions", {
         get: function () {
             if (!this.constructor.prototype.toBindActions) {
-                this.constructor.prototype = new Map();
+                this.constructor.prototype.toBindActions = new Map();
             }
             return this.constructor.prototype.toBindActions;
         },
