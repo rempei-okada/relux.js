@@ -7,7 +7,10 @@ interface StateChangedEventArgs<TState> {
 interface Subscription {
     dispose: () => void;
 }
-export declare abstract class Message {
+export declare abstract class Message<TPayload = undefined> {
+    readonly payload: TPayload;
+    readonly type: string;
+    constructor(payload: TPayload);
 }
 declare type MutationMethod<TState> = (state: TState, message: Message) => TState;
 declare type ActionMethod<TMessage extends Message = Message> = (message: TMessage) => Promise<void>;

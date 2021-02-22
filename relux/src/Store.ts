@@ -11,7 +11,14 @@ interface Subscription {
     dispose: () => void;
 }
 
-export abstract class Message { }
+export abstract class Message<TPayload = {}> {
+    readonly payload: TPayload;
+    readonly type: string;
+    constructor(payload: TPayload) {
+        this.payload = payload;
+        this.type = this.constructor.name;
+    }
+}
 
 type MutationMethod<TState> = (state: TState, message: Message) => TState;
 

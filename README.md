@@ -114,14 +114,14 @@ In the following example, the Decorator is used to bind the Actoin and Message t
 import { Store, State, Message, action, store } from "relux.js";
 
 // Mutaion messages for mutation
-class CountUp extends Message { }
+class CountUp extends Message<number> { }
 class BeginLoading extends Message { }
 class EndLoading extends Message { }
 
 // Action messages for dispatch action
-export class CountUpWithTimer extends Message {
-    constructor(readonly timeout: number) { super(); }
-}
+export class CountUpWithTimer extends Message<{
+    timeout: number
+}> { }
 
 // specify store name
 @store({ name: "CounterStore" })
@@ -140,10 +140,9 @@ export class CounterStore extends Store<CounterState> {
                 return state.clone({
                     isLoading: false
                 });
-            case message instanceof CountUp:
-                const payload = message as CountUp;
+            case message instanceof CountUp: const m = message as CountUp;
                 return state.clone({
-                    count: state.count + 1
+                    count: state.count + m.payload
                 });
             default:
                 return state;
@@ -154,9 +153,9 @@ export class CounterStore extends Store<CounterState> {
     protected async countUpWithTimer(message: CountUpWithTimer): Promise<void> {
         this.mutate(new BeginLoading);
 
-        await this.delay(message.timeout);
+        await this.delay(message.payload.timeout);
 
-        this.mutate(new CountUp);
+        this.mutate(new CountUp(2));
         this.mutate(new EndLoading);
     }
 
@@ -278,9 +277,7 @@ export class FibonacciService {
     }
 }
 
-class SetFib extends Message {
-    constructor(readonly fib: number) { super(); }
-}
+class SetFib extends Message<number> { }
 export class CalcFib extends Message { }
 
 /**
@@ -294,13 +291,12 @@ export class FibStore extends Store<FibState> {
 
     static update(state: FibState, message: Message): FibState {
         switch (true) {
-            case message instanceof SetFib:
-                const payload = message as SetFib;
+            case message instanceof SetFib: const payload = (message as SetFib).payload;
                 return {
                     ...state,
                     n: state.n + 1,
-                    count: payload.fib,
-                    history: [...state.history, payload.fib]
+                    count: payload,
+                    history: [...state.history, payload]
                 }
             default: return state;
         }
@@ -353,13 +349,13 @@ class HogeService {
 }
 
 class TestMessage extends Message {}
-class SetTest extends Message {
-    constructor(readonly test: string) {}
-}
+class SetTest extends Message<...> {}
 
 @store({ name: "TestStore"})
 class TestStore extends Store<...> {
-    constructor(readonly hogeService: HogeService) {}
+    constructor(readonly hogeService: HogeService) {
+        ...
+    }
 
     @action(TestMessage)
     async invoke(_: TestMessage) {
@@ -393,9 +389,9 @@ class HogeService {
 }
 
 class TestMessage extends Message {}
-class SetTest extends Message {
-    constructor(readonly test: string) {}
-}
+class SetTest extends Message<{ 
+    test: string 
+}> { }
 
 class TestStore extends Store<...> {
     static parameters = [HogeService];

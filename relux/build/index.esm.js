@@ -75,7 +75,9 @@ function __spreadArrays() {
 }
 
 var Message = /** @class */ (function () {
-    function Message() {
+    function Message(payload) {
+        this.payload = payload;
+        this.type = this.constructor.name;
     }
     return Message;
 }());
