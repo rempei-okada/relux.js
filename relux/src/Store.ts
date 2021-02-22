@@ -27,7 +27,7 @@ export abstract class Store<TState = object> {
 
     private get _actions(): Map<constructor<Message>, ActionMethod> {
         if (!(this.constructor.prototype as any).toBindActions) {
-            (this.constructor.prototype as any) = new Map();
+            (this.constructor.prototype as any).toBindActions = new Map();
         }
         return (this.constructor.prototype as any).toBindActions;
     }
