@@ -5,5 +5,11 @@ import { Provider, StoreOption } from "./Store";
  * @param option store option
  */
 export function createProvider(option: StoreOption) {
-    return new Provider(option);
+    try {
+        return new Provider(option);
+    }
+    catch (ex) {
+        console.error(ex.message);
+        throw new Error(ex.message);
+    }
 }

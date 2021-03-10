@@ -24,6 +24,13 @@ type MutationMethod<TState> = (state: TState, message: Message) => TState;
 
 type ActionMethod<TMessage extends Message = Message> = (message: TMessage) => Promise<void>;
 
+class NotRegisteredMessageException extends Error {
+    constructor(m: string) {
+        super(m);
+        Object.setPrototypeOf(this, NotRegisteredMessageException.prototype);
+    }
+}
+
 export abstract class Store<TState = object> {
     private _state: TState;
     private observers: Observer<TState>[] = [];
@@ -78,7 +85,7 @@ export abstract class Store<TState = object> {
     public async dispatch(message: Message): Promise<void> {
         const action = this._actions.get(message.constructor as constructor<Message>);
         if (!action) {
-            throw new Error(`Message "${message.constructor.name} is not registered`);
+            throw new NotRegisteredMessageException(`Message "${message.constructor.name}" is not registered`);
         }
 
         await action.bind(this)(message);
@@ -136,7 +143,7 @@ export function action(message: constructor<Message>) {
 }
 
 export class Provider<TRootState = { [key: string]: any }> {
-    private readonly _container: ReflectiveInjector;
+    private readonly _container!: ReflectiveInjector;
     private readonly _storesDefines: { name: string, type: constructor<object> }[];
     private observers: Observer<object>[] = [];
 
@@ -154,13 +161,18 @@ export class Provider<TRootState = { [key: string]: any }> {
         ]);
 
         for (const ctor of option.stores) {
-            const store = this._container.get(ctor) as Store;
+            try {
+                const store = this._container!.get(ctor) as Store;
 
-            store.subscribe((e: StateChangedEventArgs<object>) => {
-                for (const observer of this.observers) {
-                    observer(e);
-                }
-            });
+                store.subscribe((e: StateChangedEventArgs<object>) => {
+                    for (const observer of this.observers) {
+                        observer(e);
+                    }
+                });
+            }
+            catch (ex) {
+                throw new Error(`Failed to create relux provider "${ex.message}" \n`);
+            }
         }
 
         this._storesDefines = option.stores.map(c => ({
@@ -187,8 +199,13 @@ export class Provider<TRootState = { [key: string]: any }> {
                     await store.dispatch(message);
                     return;
                 }
-                catch {
-
+                catch (ex) {
+                    if (ex instanceof NotRegisteredMessageException) {
+                        continue;
+                    }
+                    else {
+                        throw new Error(ex);
+                    }
                 }
             }
         }

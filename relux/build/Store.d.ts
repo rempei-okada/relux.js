@@ -7,7 +7,7 @@ interface StateChangedEventArgs<TState> {
 interface Subscription {
     dispose: () => void;
 }
-export declare abstract class Message<TPayload = undefined> {
+export declare abstract class Message<TPayload = {}> {
     readonly payload: TPayload;
     readonly type: string;
     constructor(payload: TPayload);

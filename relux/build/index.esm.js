@@ -16,6 +16,20 @@ LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
 OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 ***************************************************************************** */
+/* global Reflect, Promise */
+
+var extendStatics = function(d, b) {
+    extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+    return extendStatics(d, b);
+};
+
+function __extends(d, b) {
+    extendStatics(d, b);
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+}
 
 var __assign = function() {
     __assign = Object.assign || function __assign(t) {
@@ -81,6 +95,15 @@ var Message = /** @class */ (function () {
     }
     return Message;
 }());
+var NotRegisteredMessageException = /** @class */ (function (_super) {
+    __extends(NotRegisteredMessageException, _super);
+    function NotRegisteredMessageException(m) {
+        var _this = _super.call(this, m) || this;
+        Object.setPrototypeOf(_this, NotRegisteredMessageException.prototype);
+        return _this;
+    }
+    return NotRegisteredMessageException;
+}(Error));
 var Store = /** @class */ (function () {
     function Store(initialState, mutation) {
         this.observers = [];
@@ -137,7 +160,7 @@ var Store = /** @class */ (function () {
                     case 0:
                         action = this._actions.get(message.constructor);
                         if (!action) {
-                            throw new Error("Message \"" + message.constructor.name + " is not registered");
+                            throw new NotRegisteredMessageException("Message \"" + message.constructor.name + "\" is not registered");
                         }
                         return [4 /*yield*/, action.bind(this)(message)];
                     case 1:
@@ -190,13 +213,18 @@ var Provider = /** @class */ (function () {
         this._container = ReflectiveInjector.resolveAndCreate(__spreadArrays(option.services || [], option.stores));
         for (var _i = 0, _a = option.stores; _i < _a.length; _i++) {
             var ctor = _a[_i];
-            var store_1 = this._container.get(ctor);
-            store_1.subscribe(function (e) {
-                for (var _i = 0, _a = _this.observers; _i < _a.length; _i++) {
-                    var observer = _a[_i];
-                    observer(e);
-                }
-            });
+            try {
+                var store_1 = this._container.get(ctor);
+                store_1.subscribe(function (e) {
+                    for (var _i = 0, _a = _this.observers; _i < _a.length; _i++) {
+                        var observer = _a[_i];
+                        observer(e);
+                    }
+                });
+            }
+            catch (ex) {
+                throw new Error("Failed to create relux provider \"" + ex.message + "\" \n");
+            }
         }
         this._storesDefines = option.stores.map(function (c) { return ({
             name: c.slice,
@@ -221,27 +249,32 @@ var Provider = /** @class */ (function () {
     };
     Provider.prototype.dispatch = function (message) {
         return __awaiter(this, void 0, void 0, function () {
-            var _i, _a, s, store_2;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            var _i, _a, s, store_2, ex_1;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         _i = 0, _a = this._storesDefines;
-                        _c.label = 1;
+                        _b.label = 1;
                     case 1:
                         if (!(_i < _a.length)) return [3 /*break*/, 6];
                         s = _a[_i];
                         store_2 = this._container.get(s.type);
                         if (!store_2) return [3 /*break*/, 5];
-                        _c.label = 2;
+                        _b.label = 2;
                     case 2:
-                        _c.trys.push([2, 4, , 5]);
+                        _b.trys.push([2, 4, , 5]);
                         return [4 /*yield*/, store_2.dispatch(message)];
                     case 3:
-                        _c.sent();
+                        _b.sent();
                         return [2 /*return*/];
                     case 4:
-                        _c.sent();
-                        return [3 /*break*/, 5];
+                        ex_1 = _b.sent();
+                        if (ex_1 instanceof NotRegisteredMessageException) {
+                            return [3 /*break*/, 5];
+                        }
+                        else {
+                            throw new Error(ex_1);
+                        }
                     case 5:
                         _i++;
                         return [3 /*break*/, 1];
@@ -284,7 +317,13 @@ var State = /** @class */ (function () {
  * @param option store option
  */
 function createProvider(option) {
-    return new Provider(option);
+    try {
+        return new Provider(option);
+    }
+    catch (ex) {
+        console.error(ex.message);
+        throw new Error(ex.message);
+    }
 }
 
 function service() {

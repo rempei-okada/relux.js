@@ -41,30 +41,4 @@ export default [
             commonjs()
         ]
     },
-    // {
-    //     input: './src/index.ts',
-    //     output: {
-    //         format: 'cjs',
-    //         dir: './dist/', // 出力先ディレクトリトップ
-    //         entryFileNames: 'index.js',
-    //     },
-    //     external: [
-    //         'react'
-    //     ],
-    //     globals: {
-    //         "react": "React"
-    //     },
-    //     plugins: [
-    //         typescript({
-    //             tsconfigOverride: {
-    //                 declaration: true,
-    //                 compilerOptions: {
-    //                     module: "es2015",
-    //                 }
-    //             }
-    //         }),
-    //         nodeResolve(),
-    //         commonjs()
-    //     ]
-    // }
 ];
