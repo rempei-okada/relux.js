@@ -36,17 +36,9 @@ var useObserver = function (storeType, selector) {
     return _selector(provider.resolve(storeType).state);
 };
 
-var useDispatch = function (storeType) {
-    var provider = useContext(StoreContext);
-    if (provider) {
-        if (storeType) {
-            return provider.resolve(storeType).dispatch.bind(provider);
-        }
-        return provider.dispatch.bind(provider);
-    }
-    else {
-        throw new Error("Store is not specified");
-    }
+var useStore = function (type) {
+    var provider = useProvider();
+    return provider.resolve(type);
 };
 
-export { StoreContext, StoreProvider, useDispatch, useObserver, useProvider };
+export { StoreContext, StoreProvider, useObserver, useProvider, useStore };

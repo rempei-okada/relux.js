@@ -42,44 +42,6 @@ var __assign = function() {
     return __assign.apply(this, arguments);
 };
 
-function __awaiter(thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-}
-
-function __generator(thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-}
-
 function __spreadArrays() {
     for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
     for (var r = Array(s), k = 0, i = 0; i < il; i++)
@@ -91,35 +53,18 @@ function __spreadArrays() {
 var Message = /** @class */ (function () {
     function Message(payload) {
         this.payload = payload;
-        this.type = this.constructor.name;
+        this.type = this.constructor.message || this.constructor.name;
     }
     return Message;
 }());
-var NotRegisteredMessageException = /** @class */ (function (_super) {
-    __extends(NotRegisteredMessageException, _super);
-    function NotRegisteredMessageException(m) {
-        var _this = _super.call(this, m) || this;
-        Object.setPrototypeOf(_this, NotRegisteredMessageException.prototype);
-        return _this;
-    }
-    return NotRegisteredMessageException;
-}(Error));
 var Store = /** @class */ (function () {
     function Store(initialState, mutation) {
         this.observers = [];
         this._state = initialState;
-        this.mutation = mutation;
+        this.mutation = function (state, message) {
+            return mutation(state, message);
+        };
     }
-    Object.defineProperty(Store.prototype, "_actions", {
-        get: function () {
-            if (!this.constructor.prototype.toBindActions) {
-                this.constructor.prototype.toBindActions = new Map();
-            }
-            return this.constructor.prototype.toBindActions;
-        },
-        enumerable: false,
-        configurable: true
-    });
     Object.defineProperty(Store.prototype, "state", {
         get: function () {
             return this._state;
@@ -127,20 +72,6 @@ var Store = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
-    Store.prototype.bindAction = function (messageType, action) {
-        var _this = this;
-        if (this._actions.has(messageType)) {
-            throw new Error("Action \"" + messageType.name + " : " + action.name + " is already exists.\"");
-        }
-        else {
-            this._actions.set(messageType, action);
-        }
-        return {
-            dispose: function () {
-                _this._actions.delete(messageType);
-            }
-        };
-    };
     Store.prototype.mutate = function (message) {
         this._state = this.mutation(this._state, message);
         for (var _i = 0, _a = this.observers; _i < _a.length; _i++) {
@@ -151,24 +82,6 @@ var Store = /** @class */ (function () {
                 state: this.state
             });
         }
-    };
-    Store.prototype.dispatch = function (message) {
-        return __awaiter(this, void 0, void 0, function () {
-            var action;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        action = this._actions.get(message.constructor);
-                        if (!action) {
-                            throw new NotRegisteredMessageException("Message \"" + message.constructor.name + "\" is not registered");
-                        }
-                        return [4 /*yield*/, action.bind(this)(message)];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        });
     };
     Store.prototype.subscribe = function (observer) {
         var _this = this;
@@ -193,13 +106,19 @@ function store(_a) {
         return Injectable()(ctor);
     };
 }
-function action(message) {
-    return function (target, _, desc) {
+function action(name) {
+    return function (target, name, desc) {
         if (!target.toBindActions) {
             target.toBindActions = new Map();
         }
+        console.log(target, name, desc);
         if (target instanceof Store) {
-            target.toBindActions.set(message, desc.value);
+            var func_1 = desc.value;
+            desc.value = function () {
+                console.log(" -- log --");
+                var result = Reflect.apply(func_1, this, arguments);
+                return result;
+            };
         }
         else {
             throw new Error("@Action(Message) decorator can use in Store<TState> class only.");
@@ -247,42 +166,6 @@ var Provider = /** @class */ (function () {
             }
         };
     };
-    Provider.prototype.dispatch = function (message) {
-        return __awaiter(this, void 0, void 0, function () {
-            var _i, _a, s, store_2, ex_1;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _i = 0, _a = this._storesDefines;
-                        _b.label = 1;
-                    case 1:
-                        if (!(_i < _a.length)) return [3 /*break*/, 6];
-                        s = _a[_i];
-                        store_2 = this._container.get(s.type);
-                        if (!store_2) return [3 /*break*/, 5];
-                        _b.label = 2;
-                    case 2:
-                        _b.trys.push([2, 4, , 5]);
-                        return [4 /*yield*/, store_2.dispatch(message)];
-                    case 3:
-                        _b.sent();
-                        return [2 /*return*/];
-                    case 4:
-                        ex_1 = _b.sent();
-                        if (ex_1 instanceof NotRegisteredMessageException) {
-                            return [3 /*break*/, 5];
-                        }
-                        else {
-                            throw new Error(ex_1);
-                        }
-                    case 5:
-                        _i++;
-                        return [3 /*break*/, 1];
-                    case 6: throw new Error(message.constructor.name + " is not bound with action. ");
-                }
-            });
-        });
-    };
     Provider.prototype.resolve = function (type) {
         return this._container.get(type);
     };
@@ -326,8 +209,49 @@ function createProvider(option) {
     }
 }
 
-function service() {
-    return Injectable();
-}
+var defineStore = function (define) {
+    var _a;
+    return _a = /** @class */ (function (_super) {
+            __extends(class_1, _super);
+            function class_1() {
+                var _this = _super.call(this, define.initialState(), define.mutation) || this;
+                var context = {
+                    mutate: _this.mutate.bind(_this),
+                    getState: function () { return _this.state; }
+                };
+                // define actions
+                var actions = define.actions(context);
+                for (var key in actions) {
+                    _this[key] = actions[key];
+                }
+                return _this;
+            }
+            return class_1;
+        }(Store)),
+        _a.slice = define.name,
+        _a;
+};
+var defineMessage = function (name) {
+    var _a;
+    var M = (_a = /** @class */ (function (_super) {
+            __extends(class_2, _super);
+            function class_2() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            return class_2;
+        }(Message)),
+        _a.message = name,
+        _a);
+    return [
+        function (payload) { return new M(payload); },
+        function (message) { return message instanceof M; },
+        function (message) { return message.payload; }
+    ];
+};
 
-export { Message, Provider, State, Store, action, createProvider, service, store };
+var service = function () {
+    return Injectable();
+};
+var getPayload = function (message) { return message.payload; };
+
+export { Message, Provider, State, Store, action, createProvider, defineMessage, defineStore, getPayload, service, store };

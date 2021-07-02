@@ -20,7 +20,6 @@ export class EndLoading extends Message { }
 
 // Action messages
 export class CountUpWithTimer extends Message {
-    constructor(readonly timeout: number) { super(); }
 }
 
 @store({ name: "CounterStore" })
@@ -50,13 +49,13 @@ export class CounterStore extends Store<CounterState> {
     }
 
     @action(CountUpWithTimer)
-    protected async countUpWithTimer(message: CountUpWithTimer): Promise<void> {
-        this.mutate(new BeginLoading);
+    async countUpWithTimer(timeout: number): Promise<void> {
+        this.mutate(new BeginLoading({}));
 
-        await this.delay(message.timeout);
+        await this.delay(timeout);
 
-        this.mutate(new CountUp);
-        this.mutate(new EndLoading);
+        this.mutate(new CountUp({}));
+        this.mutate(new EndLoading({}));
     }
 
     private async delay(timeout: number) {

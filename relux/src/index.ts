@@ -7,10 +7,14 @@ import {
     Inject
 } from "injection-js";
 export * from "./constructor";
+import { defineStore, defineMessage } from "./functionalWrapper";
 
-function service() {
+const service = () => {
     return Injectable();
 }
+
+const getPayload = <T extends Message>(message: Message): T["payload"] => message.payload;
+
 
 export {
     Store,
@@ -21,5 +25,10 @@ export {
     Inject,
     Message,
     action,
-    store
+    store,
+    getPayload,
+
+    // Functional options
+    defineStore,
+    defineMessage
 }

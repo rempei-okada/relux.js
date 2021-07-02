@@ -16,9 +16,7 @@ export class FibonacciService {
     }
 }
 
-class SetFib extends Message {
-    constructor(readonly fib: number) { super(); }
-}
+class SetFib extends Message<number> {}
 
 export class CalcFib extends Message { }
 
@@ -34,19 +32,19 @@ export class FibStore extends Store<FibState> {
     static update(state: FibState, message: Message): FibState {
         switch (true) {
             case message instanceof SetFib:
-                const payload = message as SetFib;
+                const { payload } = message as SetFib;
                 return {
                     ...state,
                     n: state.n + 1,
-                    count: payload.fib,
-                    history: [...state.history, payload.fib]
+                    count: payload,
+                    history: [...state.history, payload]
                 }
             default: return state;
         }
     }
 
-    @action(CalcFib)
-    calc(_: CalcFib) {
+    @action()
+    calc() {
         if (this.state.n < 40 === false) {
             return;
         }

@@ -26,8 +26,8 @@
         "gatsby-source-filesystem": "^2.9.0",
         "react": "^17.0.1",
         "react-dom": "^17.0.1",
-        "react-relux": "^1.0.0",
-        "relux.js": "^1.0.0"
+        "relux.js": "2.0.2",
+        "react-relux": "2.0.0"
     },
     "devDependencies": {
         "@babel/plugin-proposal-decorators": "^7.12.12",

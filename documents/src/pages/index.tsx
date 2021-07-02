@@ -1,14 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
-import { StoreProvider, useProvider, useObserver } from "react-relux";
+import { StoreProvider, useProvider, useObserver, useStore } from "react-relux";
 import { CounterStore, CountUpWithTimer } from "../demo/counter";
 import { FibStore, CalcFib } from "../demo/fibonacci";
-import { provider } from "../demo/store";
+import { provider, HogeStore } from "../demo/store";
 
 export default () => {
     return (
         <StoreProvider provider={provider}>
             <div style={{ display: "flex" }}>
                 <div style={{ padding: "24px" }}>
+                    <Hoge />
                     <Counter />
                     <FibCounter />
                 </div>
@@ -20,14 +21,36 @@ export default () => {
     );
 };
 
+function Hoge() {
+    const store = useStore(HogeStore);
+    const count = useObserver(HogeStore, s => s.hoge);
+
+    function increment() {
+        store.countUp();
+    }
+
+    return (
+        <div>
+            <h1>Counter</h1>
+            <button onClick={increment}>Count</button>
+            <p>Counter will increment after 1000ms</p><br />
+            <div>Count: {count}</div>
+            {/* <div>Next: {next}</div>
+            <div>isLoading : {counter.isLoading ? "YES" : "NO"}</div> */}
+            <br />
+        </div>
+    );
+}
+
+
 function Counter() {
-    const provider = useProvider();
+    const store = useStore(CounterStore);
     const count = useObserver(CounterStore, s => s.count);
     const next = useObserver(CounterStore, s => s.next);
     const counter = useObserver(CounterStore, s => s);
 
     function increment() {
-        provider.dispatch(new CountUpWithTimer(1000));
+        store.countUpWithTimer(1000);
     }
 
     return (
@@ -44,11 +67,11 @@ function Counter() {
 }
 
 function FibCounter() {
-    const privider = useProvider();
     const counter = useObserver(FibStore, s => s);
+    const store = useStore(FibStore);
 
     function increment() {
-        privider.dispatch(new CalcFib());
+        store.calc();
     }
 
     return (
@@ -71,7 +94,12 @@ function History() {
 
     useEffect(() => {
         const s = provider.subscribe(e => {
-            setHistories([...histories, { key: i.current, ...e, time: new Date(), root: provider.getRootStateTree() }]);
+            setHistories([...histories, {
+                key: i.current,
+                ...e,
+                time: new Date(),
+                root: provider.getRootStateTree()
+            }]);
             i.current++;
         });
 
@@ -93,7 +121,7 @@ function History() {
                             <summary>
                                 <div style={{ display: "flex" }}>
                                     {`${h.key} ${h.store}`}
-                                    <strong style={{ marginLeft: "8px", color: "#11b7af" }}>{h.message.constructor.name}</strong>
+                                    <strong style={{ marginLeft: "8px", color: "#11b7af" }}>{h.message.type}</strong>
                                     <div style={{ marginLeft: "8px" }}>{toString(h.time)}</div>
                                 </div>
                             </summary>

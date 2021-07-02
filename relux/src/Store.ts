@@ -11,25 +11,16 @@ interface Subscription {
     dispose: () => void;
 }
 
-export abstract class Message<TPayload = {}> {
+export abstract class Message<TPayload = {} | void> {
     readonly payload: TPayload;
     readonly type: string;
     constructor(payload: TPayload) {
-        this.payload = payload;
-        this.type = this.constructor.name;
+        this.payload = payload!;
+        this.type = (this.constructor as any).message || this.constructor.name;
     }
 }
 
 type MutationMethod<TState> = (state: TState, message: Message) => TState;
-
-type ActionMethod<TMessage extends Message = Message> = (message: TMessage) => Promise<void>;
-
-class NotRegisteredMessageException extends Error {
-    constructor(m: string) {
-        super(m);
-        Object.setPrototypeOf(this, NotRegisteredMessageException.prototype);
-    }
-}
 
 export abstract class Store<TState = object> {
     private _state: TState;
@@ -39,40 +30,19 @@ export abstract class Store<TState = object> {
     public static slice = "";
     public static parameters: constructor<any>[] = [];
 
-    private get _actions(): Map<constructor<Message>, ActionMethod> {
-        if (!(this.constructor.prototype as any).toBindActions) {
-            (this.constructor.prototype as any).toBindActions = new Map();
-        }
-        return (this.constructor.prototype as any).toBindActions;
-    }
-
     public get state(): TState {
         return this._state;
     }
 
     constructor(initialState: TState, mutation: MutationMethod<TState>) {
         this._state = initialState;
-        this.mutation = mutation;
-    }
-
-    public bindAction<TMessage extends Message>(messageType: constructor<TMessage>, action: ActionMethod<TMessage>): ({ dispose: () => void }) {
-        if (this._actions.has(messageType)) {
-            throw new Error(`Action "${messageType.name} : ${action.name} is already exists."`);
+        this.mutation = (state, message) => {
+            return mutation(state, message);
         }
-        else {
-            this._actions.set(messageType, action as ActionMethod);
-        }
-
-        return {
-            dispose: () => {
-                this._actions.delete(messageType);
-            }
-        };
     }
 
     protected mutate(message: Message): void {
         this._state = this.mutation(this._state, message);
-
         for (const observer of this.observers) {
             observer({
                 message: message,
@@ -80,15 +50,6 @@ export abstract class Store<TState = object> {
                 state: this.state
             })
         }
-    }
-
-    public async dispatch(message: Message): Promise<void> {
-        const action = this._actions.get(message.constructor as constructor<Message>);
-        if (!action) {
-            throw new NotRegisteredMessageException(`Message "${message.constructor.name}" is not registered`);
-        }
-
-        await action.bind(this)(message);
     }
 
     public subscribe(observer: (e: StateChangedEventArgs<TState>) => void): Subscription {
@@ -108,8 +69,6 @@ export interface StoreOption {
 }
 
 type Observer<TState> = (e: StateChangedEventArgs<TState>) => void;
-type StoreDecorator = <TStore extends Store<TState>, TState>
-    (target: StoreClass<TStore, TState>) => StoreClass<TStore, TState>;
 
 export type StoreClass<TStore extends Store<TState>, TState> = {
     new(...args: any[]): TStore & Store<TState>;
@@ -127,14 +86,22 @@ export function store({ name }: { name: string }): any {
     } as any;
 }
 
-export function action(message: constructor<Message>) {
-    return function (target: Store, _: string, desc: PropertyDescriptor) {
+export function action(name?: string) {
+    return function (target: Store, name: string, desc: PropertyDescriptor) {
         if (!(target as any).toBindActions) {
             (target as any).toBindActions = new Map();
         }
 
+        console.log(target, name, desc);
+
         if (target instanceof Store) {
-            (target as any).toBindActions.set(message, desc.value);
+            const func = desc.value;
+            desc.value = function () {
+                console.log(" -- log --");
+                const result = Reflect.apply(func, this, arguments);
+
+                return result;
+            };
         }
         else {
             throw new Error(`@Action(Message) decorator can use in Store<TState> class only.`)
@@ -191,29 +158,7 @@ export class Provider<TRootState = { [key: string]: any }> {
         };
     }
 
-    public async dispatch(message: Message): Promise<void> {
-        for (const s of this._storesDefines) {
-            const store = this._container.get(s.type) as Store;
-            if (store) {
-                try {
-                    await store.dispatch(message);
-                    return;
-                }
-                catch (ex) {
-                    if (ex instanceof NotRegisteredMessageException) {
-                        continue;
-                    }
-                    else {
-                        throw new Error(ex);
-                    }
-                }
-            }
-        }
-
-        throw new Error(`${message.constructor.name} is not bound with action. `)
-    }
-
-    public resolve(type: constructor<any>) {
-        return this._container.get(type);
+    public resolve<T>(type: constructor<T>) {
+        return this._container.get(type) as T;
     }
 }
